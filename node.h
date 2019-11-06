@@ -9,11 +9,11 @@ class Node {
 protected:
     T data;
     Node<T> *next, *down;
-    unsigned int row, column;
+    int row, column;
 public:
     explicit Node() {
         next = down = nullptr;
-        row = column = 0;
+        row = column = -1;
     };
 
     friend class Matrix<T>;

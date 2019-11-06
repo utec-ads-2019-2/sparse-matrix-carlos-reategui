@@ -4,11 +4,9 @@
 
 int main() {
     //Tester::execute();
-    auto* sparseMatrix = new Matrix<sui>(3, 5);
-
-
-    //sparseMatrix->print();
-
+    auto* sparseMatrix = new Matrix<si>(2, 2);
+    sparseMatrix->set(0, 0, 4);
+    sparseMatrix->set(0, 1, 5);
 
 
     return EXIT_SUCCESS;
