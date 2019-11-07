@@ -46,7 +46,16 @@ public:
         SourceNode<T>* sourceRowNode = rowsNodes[row];
         SourceNode<T>* sourceColumnNode = columnsNodes[column];
 
-        if (findAndReturnNode(row, column) and data == 0) {
+        bool dataEqualsZero = false;
+
+        if (is_same<T, int>::value or is_same<T, float>::value)
+            if (data == 0)
+                dataEqualsZero = true;
+        if (is_same<T, char>::value)
+            if (data == '0')
+                dataEqualsZero = true;
+
+        if (findAndReturnNode(row, column) and dataEqualsZero) {
             MatrixNode<T>* nodeToDelete = findAndReturnNode(row, column),
             *onTheRightOfNodeToDelete = nodeToDelete->next,
             *belowNodeToDelete = nodeToDelete->down;
@@ -68,6 +77,11 @@ public:
             }
             delete nodeToDelete;
             nodeToDelete = nullptr;
+            return;
+        }
+
+        if (findAndReturnNode(row, column) and findAndReturnNode(row, column)->data != data) {
+            findAndReturnNode(row, column)->data = data;
             return;
         }
 
@@ -108,12 +122,6 @@ public:
             }
             return;
         }
-
-        if (findAndReturnNode(row, column) and findAndReturnNode(row, column)->data != data) {
-            findAndReturnNode(row, column)->data = data;
-            return;
-        }
-
     }
 
     T operator()(sui row, sui column) const {
@@ -223,7 +231,26 @@ public:
     }
 
     ~Matrix() {
-    };
+        while (!rowsNodes.empty()) {
+            MatrixNode<T>* currentNode = rowsNodes.back()->link;
+            while (currentNode) {
+                MatrixNode<T>* temp = currentNode;
+                currentNode = currentNode->next;
+                delete temp;
+                temp = nullptr;
+            }
+            SourceNode<T>* temp = rowsNodes.back();
+            rowsNodes.pop_back();
+            delete temp;
+            temp = nullptr;
+        }
+        while (!columnsNodes.empty()) {
+            SourceNode<T>* temp = columnsNodes.back();
+            columnsNodes.pop_back();
+            delete temp;
+            temp = nullptr;
+        }
+    }
 };
 
 #endif //SPARSE_MATRIX_MATRIX_H

@@ -5,16 +5,7 @@
 int main() {
     Tester::execute();
 
-    /*auto sparseMatrix2 = new Matrix<string>(2, 3);
-    sparseMatrix2->set(0, 0, "(0, 0)");
-    sparseMatrix2->set(0, 1, "(0, 1)");
-    sparseMatrix2->set(0, 2, "(0, 2)");
-    sparseMatrix2->set(1, 0, "(1, 0)");
-    sparseMatrix2->set(1, 1, "(1, 1)");
-    sparseMatrix2->set(1, 2, "(1, 2)");
-    sparseMatrix2->print();
-
-    auto m1 = new Matrix<int>(2, 2);
+    /*auto m1 = new Matrix<int>(2, 2);
     m1->set(0, 0, 1);
     m1->set(0, 1, 2);
     m1->set(1, 0, 3);
@@ -45,7 +36,7 @@ int main() {
 
     cout << m2->operator==(*m3) << endl;
 
-    auto mul = m1->operator*(*m3);
+    auto mul = *m1 * (*m3);
     mul.print();
 
     auto m4 = new Matrix<int>(2, 3);
