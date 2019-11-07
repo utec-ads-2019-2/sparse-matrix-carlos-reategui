@@ -47,7 +47,7 @@ public:
         SourceNode<T>* sourceColumnNode = columnsNodes[column];
 
         if (findAndReturnNode(row, column) and data == 0) {
-            MatrixNode<T>* currentNodeOfRow = sourceRowNode->link;
+            /*MatrixNode<T>* currentNodeOfRow = sourceRowNode->link;
             MatrixNode<T>* currentNodeOfColumn = sourceColumnNode->link;
             if (currentNodeOfRow->column == column) {
                 MatrixNode<T>* onTheRightOfCurrentNodeOfRow = currentNodeOfRow->next;
@@ -60,7 +60,7 @@ public:
                 sourceColumnNode->link = belowCurrentNodeOfColumn;
                 delete currentNodeOfColumn;
                 currentNodeOfColumn = nullptr;
-            }
+            }*/
         }
 
         if (!findAndReturnNode(row, column)) {
