@@ -223,36 +223,6 @@ public:
     }
 
     ~Matrix() {
-        /*while(!rowsNodes->empty()) {
-            if (rowsNodes->back()->next) {
-                MatrixNode<T>* currentNode = rowsNodes->back()->next, *temp = nullptr;
-                while (currentNode) {
-                    temp = currentNode;
-                    currentNode = currentNode->next;
-                    delete temp;
-                    temp = nullptr;
-                }
-            }
-            SourceNode<T>* temp = rowsNodes->back();
-            delete temp;
-            temp = nullptr;
-            rowsNodes->pop_back();
-        }
-        while(!columnsNodes->empty()) {
-            if (columnsNodes->back()->down) {
-                MatrixNode<T>* currentNode = columnsNodes->back()->down, *temp = nullptr;
-                while (currentNode) {
-                    temp = currentNode;
-                    currentNode = currentNode->down;
-                    delete temp;
-                    temp = nullptr;
-                }
-            }
-            SourceNode<T>* temp = columnsNodes->back();
-            delete temp;
-            temp = nullptr;
-            columnsNodes->pop_back();
-        }*/
     };
 };
 

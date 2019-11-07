@@ -3,7 +3,7 @@
 #include "tester/tester.h"
 
 int main() {
-    //Tester::execute();
+    Tester::execute();
 
     /*auto sparseMatrix2 = new Matrix<string>(2, 3);
     sparseMatrix2->set(0, 0, "(0, 0)");
@@ -12,7 +12,7 @@ int main() {
     sparseMatrix2->set(1, 0, "(1, 0)");
     sparseMatrix2->set(1, 1, "(1, 1)");
     sparseMatrix2->set(1, 2, "(1, 2)");
-    sparseMatrix2->print();*/
+    sparseMatrix2->print();
 
     auto m1 = new Matrix<int>(2, 2);
     m1->set(0, 0, 1);
@@ -71,7 +71,7 @@ int main() {
     m5->set(1, 1, 0);
     m5->print();
 
-
+*/
     return EXIT_SUCCESS;
 }
 

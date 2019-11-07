@@ -1,4 +1,4 @@
-/*#ifndef MOCKER_H
+#ifndef MOCKER_H
 #define MOCKER_H
 
 #include <random>
@@ -37,4 +37,4 @@ class Mocker {
         }
 };
 
-#endif*/
+#endif

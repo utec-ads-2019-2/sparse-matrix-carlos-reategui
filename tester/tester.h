@@ -1,4 +1,4 @@
-/*#ifndef TESTER_H
+#ifndef TESTER_H
 #define TESTER_H
 
 #include <stdexcept>
@@ -42,4 +42,4 @@ class Tester {
         static void execute();
 };
 
-#endif*/
+#endif
