@@ -12,20 +12,30 @@ using namespace std;
 template <typename T>
 class Matrix {
 private:
-    vector<SourceRowNode<T>* >* rowsNodes;
-    vector<SourceColumnNode<T>* >* columnsNodes;
+    vector<SourceRowNode<T>* > rowsNodes;
+    vector<SourceColumnNode<T>* > columnsNodes;
     sui numberOfRows, numberOfColumns;
+
+    MatrixNode<T>* findAndReturnNode(sui row, sui column) {
+        if (row > numberOfRows or column > numberOfColumns)
+            throw invalid_argument("Index out of range");
+
+        MatrixNode<T>* currentNode = rowsNodes[row]->next;
+        while (currentNode) {
+            if (currentNode->column == column)
+                return currentNode;
+            currentNode = currentNode->next;
+        }
+        return nullptr;
+    }
 
 public:
     Matrix(sui rows, sui columns) : numberOfRows(rows), numberOfColumns(columns) {
-        rowsNodes = new vector<SourceRowNode<T>* >(rows);
-        columnsNodes = new vector<SourceColumnNode<T>* >(columns);
-        
         for (sui i = 0; i < rows; ++i)
-            (*rowsNodes)[i] = new SourceRowNode<T>(i);
+            rowsNodes.push_back(new SourceRowNode<T>(i));
 
         for (sui i = 0; i < columns; ++i)
-            (*columnsNodes)[i] = new SourceColumnNode<T>(i);
+            columnsNodes.push_back(new SourceColumnNode<T>(i));
     }
 
     void set(sui row, sui column, T data) {
@@ -34,8 +44,8 @@ public:
 
         if (!findAndReturnNode(row, column)) {
             auto nodeToInsert = new MatrixNode<T>(row, column, data);
-            SourceRowNode<T>* sourceRowNode = (*rowsNodes)[row];
-            SourceColumnNode<T>* sourceColumnNode = (*columnsNodes)[column];
+            SourceRowNode<T>* sourceRowNode = rowsNodes[row];
+            SourceColumnNode<T>* sourceColumnNode = columnsNodes[column];
 
             if (!sourceRowNode->next)
                 sourceRowNode->next = nodeToInsert;
@@ -76,24 +86,11 @@ public:
         }
     }
 
-    MatrixNode<T>* findAndReturnNode(sui row, sui column) {
-        if (row > numberOfRows or column > numberOfColumns)
-            throw invalid_argument("Index out of range");
-
-        MatrixNode<T>* currentNode = (*rowsNodes)[row]->next;
-        while (currentNode) {
-            if (currentNode->column == column)
-                return currentNode;
-            currentNode = currentNode->next;
-        }
-        return nullptr;
-    }
-
     T operator()(sui row, sui column) const {
         if (row > numberOfRows or column > numberOfColumns)
             throw invalid_argument("Index out of range");
 
-        MatrixNode<T>* currentNode = (*rowsNodes)[row]->next;
+        MatrixNode<T>* currentNode = rowsNodes[row]->next;
         while (currentNode) {
             if (currentNode->column == column)
                 return currentNode->data;
@@ -102,7 +99,7 @@ public:
         return 0;
     }
 
-    const bool operator==(Matrix<T> other) {
+    bool operator==(Matrix<T> other) {
         for (sui r = 0; r < numberOfRows; ++r)
             for (sui c = 0; c < numberOfColumns; ++c)
                 if (this->operator()(r, c) != other.operator()(r, c))
@@ -126,19 +123,17 @@ public:
         for (sui i = 0; i < numberOfColumns; ++i) {
             vector<T> numbersOfRow(numberOfColumns);
             for (sui j = 0; j < numberOfColumns; ++j)
-                numbersOfRow.push_back(this->operator()(i, j));
+                numbersOfRow[j] = this->operator()(i, j);
             for (sui j = 0; j < other.numberOfRows; ++j) {
                 T answer = 0;
                 vector<T> numbersOfColumn(other.numberOfRows);
                 for (sui k = 0; k < other.numberOfRows; ++k)
-                    numbersOfColumn.push_back(this->operator()(k, j));
-                for (sui k = 0; k < numberOfColumns; ++k) {
-                    answer += numbersOfRow[k] + numbersOfColumn[k];
-                }
+                    numbersOfColumn[k] = other.operator()(k, j);
+                for (sui k = 0; k < numberOfColumns; ++k)
+                    answer += numbersOfRow[k] * numbersOfColumn[k];
                 result.set(i, j, answer);
             }
         }
-
         return result;
     }
 
@@ -166,13 +161,17 @@ public:
     
     const Matrix<T> transpose() const {
         Matrix<T> result(numberOfRows, numberOfColumns);
-        if (numberOfColumns < 1 and numberOfRows < 1) {
+        if (numberOfRows > 1 or numberOfColumns > 1) {
             if (numberOfRows == numberOfColumns) {
                 for (sui r = 0; r < numberOfRows; ++r) {
-                    for (sui c = r + 1; c < numberOfColumns; ++c) {
-                        T temp = this->operator()(r, c);
-                        result.set(r, c, this->operator()(c, r));
-                        result.set(c, r, temp);
+                    for (sui c = r; c < numberOfColumns; ++c) {
+                        if (r == c) {
+                            result.set(r, c, this->operator()(r, c));
+                        } else {
+                            T temp = this->operator()(r, c);
+                            result.set(r, c, this->operator()(c, r));
+                            result.set(c, r, temp);
+                        }
                     }
                 }
                 return result;

@@ -21,11 +21,16 @@ int main() {
     m1->set(1, 1, 4);
     m1->print();
 
-    auto m2 = new Matrix<int>(2, 2);
+    auto m2 = new Matrix<int>(3, 3);
     m2->set(0, 0, 10);
     m2->set(0, 1, 20);
-    m2->set(1, 0, 30);
-    m2->set(1, 1, 40);
+    m2->set(0, 2, 30);
+    m2->set(1, 0, 40);
+    m2->set(1, 1, 50);
+    m2->set(1, 2, 60);
+    m2->set(2, 0, 70);
+    m2->set(2, 1, 80);
+    m2->set(2, 2, 90);
     m2->print();
 
     auto m3 = new Matrix<int>(2, 2);
@@ -35,16 +40,13 @@ int main() {
     m3->set(1, 1, 40);
     m3->print();
 
-    auto sum = m1->operator+(*m2);
-    sum.print();
-
-    auto res = m1->operator-(*m2);
-    res.print();
-
-    auto trans = res.transpose();
-    //trans.print();
+    auto trans = m2->transpose();
+    trans.print();
 
     cout << m2->operator==(*m3) << endl;
+
+    auto mul = m1->operator*(*m3);
+    mul.print();
 
     return EXIT_SUCCESS;
 }
