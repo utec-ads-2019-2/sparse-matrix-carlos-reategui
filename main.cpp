@@ -48,6 +48,27 @@ int main() {
     auto mul = m1->operator*(*m3);
     mul.print();
 
+    auto m4 = new Matrix<int>(2, 3);
+    m4->set(0, 0, 1);
+    m4->set(0, 1, 2);
+    m4->set(0, 2, 3);
+    m4->set(1, 0, 4);
+    m4->set(1, 1, 5);
+    m4->set(1, 2, 6);
+    m4->print();
+
+    auto trans2 = m4->transpose();
+    trans2.print();
+
+    auto m5 = new Matrix<int>(2, 2);
+    m5->set(0, 0, 1);
+    m5->set(0, 1, 2);
+    m5->set(1, 0, 3);
+    m5->set(1, 1, 4);
+
+
+    m5->set(0, 0, 0);
+
     return EXIT_SUCCESS;
 }
 

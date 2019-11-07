@@ -14,33 +14,21 @@ public:
     MatrixNode(unsigned int row, unsigned int column, T data) : row(row), column(column), data(data), next(nullptr),
     down(nullptr) {}
 
-    ~MatrixNode() {}
+    ~MatrixNode() {
+        next = nullptr;
+        down = nullptr;
+    }
 
     friend class Matrix<T>;
 };
 
 template <class T>
-class SourceRowNode {
+class SourceNode {
 protected:
-    unsigned int row;
-    MatrixNode<T>* next;
+    unsigned int index;
+    MatrixNode<T>* link;
 public:
-    explicit SourceRowNode(unsigned int row) : row(row), next(nullptr) {}
+    explicit SourceNode(unsigned int index) : index(index), link(nullptr) {}
     friend class Matrix<T>;
 };
-
-
-template <class T>
-class SourceColumnNode {
-protected:
-    unsigned int column;
-    MatrixNode<T>* down;
-public:
-    explicit SourceColumnNode(unsigned int column) : column(column), down(nullptr) {}
-    friend class Matrix<T>;
-};
-
-
-
-
 #endif //SPARSE_MATRIX_NODE_H

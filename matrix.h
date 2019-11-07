@@ -12,15 +12,15 @@ using namespace std;
 template <typename T>
 class Matrix {
 private:
-    vector<SourceRowNode<T>* > rowsNodes;
-    vector<SourceColumnNode<T>* > columnsNodes;
+    vector<SourceNode<T>* > rowsNodes;
+    vector<SourceNode<T>* > columnsNodes;
     sui numberOfRows, numberOfColumns;
 
-    MatrixNode<T>* findAndReturnNode(sui row, sui column) {
+    MatrixNode<T>* findAndReturnNode(sui row, sui column) const {
         if (row > numberOfRows or column > numberOfColumns)
             throw invalid_argument("Index out of range");
 
-        MatrixNode<T>* currentNode = rowsNodes[row]->next;
+        MatrixNode<T>* currentNode = rowsNodes[row]->link;
         while (currentNode) {
             if (currentNode->column == column)
                 return currentNode;
@@ -32,27 +32,46 @@ private:
 public:
     Matrix(sui rows, sui columns) : numberOfRows(rows), numberOfColumns(columns) {
         for (sui i = 0; i < rows; ++i)
-            rowsNodes.push_back(new SourceRowNode<T>(i));
+            rowsNodes.push_back(new SourceNode<T>(i));
 
         for (sui i = 0; i < columns; ++i)
-            columnsNodes.push_back(new SourceColumnNode<T>(i));
+            columnsNodes.push_back(new SourceNode<T>(i));
     }
 
     void set(sui row, sui column, T data) {
         if (row > numberOfRows or column > numberOfColumns)
             throw invalid_argument("Index out of range");
 
+
+        SourceNode<T>* sourceRowNode = rowsNodes[row];
+        SourceNode<T>* sourceColumnNode = columnsNodes[column];
+
+        if (findAndReturnNode(row, column) and data == 0) {
+            MatrixNode<T>* currentNodeOfRow = sourceRowNode->link;
+            MatrixNode<T>* currentNodeOfColumn = sourceColumnNode->link;
+            if (currentNodeOfRow->column == column) {
+                MatrixNode<T>* onTheRightOfCurrentNodeOfRow = currentNodeOfRow->next;
+                sourceRowNode->link = onTheRightOfCurrentNodeOfRow;
+                delete currentNodeOfRow;
+                currentNodeOfRow = nullptr;
+            }
+            if (currentNodeOfColumn->row == row) {
+                MatrixNode<T>* belowCurrentNodeOfColumn = currentNodeOfColumn->down;
+                sourceColumnNode->link = belowCurrentNodeOfColumn;
+                delete currentNodeOfColumn;
+                currentNodeOfColumn = nullptr;
+            }
+        }
+
         if (!findAndReturnNode(row, column)) {
             auto nodeToInsert = new MatrixNode<T>(row, column, data);
-            SourceRowNode<T>* sourceRowNode = rowsNodes[row];
-            SourceColumnNode<T>* sourceColumnNode = columnsNodes[column];
 
-            if (!sourceRowNode->next)
-                sourceRowNode->next = nodeToInsert;
+            if (!sourceRowNode->link)
+                sourceRowNode->link = nodeToInsert;
             else {
-                MatrixNode<T>* currentNodeOfRow = sourceRowNode->next;
+                MatrixNode<T>* currentNodeOfRow = sourceRowNode->link;
                 if (column < currentNodeOfRow->column) {
-                    sourceRowNode->next = nodeToInsert;
+                    sourceRowNode->link = nodeToInsert;
                     nodeToInsert->next = currentNodeOfRow;
                 } else if (column > currentNodeOfRow->column) {
                     while (currentNodeOfRow->next and currentNodeOfRow->next->column < column)
@@ -63,12 +82,12 @@ public:
                     nodeToInsert->next = onTheRightOfNodeToInsert;
                 }
             }
-            if (!sourceColumnNode->down)
-                sourceColumnNode->down = nodeToInsert;
+            if (!sourceColumnNode->link)
+                sourceColumnNode->link = nodeToInsert;
             else {
-                MatrixNode<T>* currentNodeOfColumn = sourceColumnNode->down;
+                MatrixNode<T>* currentNodeOfColumn = sourceColumnNode->link;
                 if (row < currentNodeOfColumn->row) {
-                    sourceColumnNode->down = nodeToInsert;
+                    sourceColumnNode->link = nodeToInsert;
                     nodeToInsert->down = currentNodeOfColumn;
                 } else if (row > currentNodeOfColumn->row) {
                     while (currentNodeOfColumn->down and currentNodeOfColumn->down->row < row)
@@ -79,24 +98,18 @@ public:
                     nodeToInsert->down = belowNodeToInsert;
                 }
             }
-
-        } else if (findAndReturnNode(row, column) and findAndReturnNode(row, column)->data != data) {
-            MatrixNode<T>* node = findAndReturnNode(row, column);
-            node->data = data;
         }
+
+        if (findAndReturnNode(row, column) and findAndReturnNode(row, column)->data != data)
+            findAndReturnNode(row, column)->data = data;
     }
 
     T operator()(sui row, sui column) const {
-        if (row > numberOfRows or column > numberOfColumns)
-            throw invalid_argument("Index out of range");
-
-        MatrixNode<T>* currentNode = rowsNodes[row]->next;
-        while (currentNode) {
-            if (currentNode->column == column)
-                return currentNode->data;
-            currentNode = currentNode->next;
-        }
-        return 0;
+        MatrixNode<T>* node = findAndReturnNode(row, column);
+        if (node)
+            return node->data;
+        else
+            return 0;
     }
 
     bool operator==(Matrix<T> other) {
@@ -160,7 +173,7 @@ public:
     }
     
     const Matrix<T> transpose() const {
-        Matrix<T> result(numberOfRows, numberOfColumns);
+        Matrix<T> result(numberOfColumns, numberOfRows);
         if (numberOfRows > 1 or numberOfColumns > 1) {
             if (numberOfRows == numberOfColumns) {
                 for (sui r = 0; r < numberOfRows; ++r) {
@@ -177,7 +190,10 @@ public:
                 return result;
             }
             else {
-                // ROWS != COLUMNS
+                for (sui i = 0; i < numberOfColumns; ++i)
+                    for (sui j = 0; j < numberOfRows; ++j)
+                        result.set(i, j, this->operator()(j, i));
+                return result;
             }
         }
         return result;
@@ -211,7 +227,7 @@ public:
                     temp = nullptr;
                 }
             }
-            SourceRowNode<T>* temp = rowsNodes->back();
+            SourceNode<T>* temp = rowsNodes->back();
             delete temp;
             temp = nullptr;
             rowsNodes->pop_back();
@@ -226,7 +242,7 @@ public:
                     temp = nullptr;
                 }
             }
-            SourceColumnNode<T>* temp = columnsNodes->back();
+            SourceNode<T>* temp = columnsNodes->back();
             delete temp;
             temp = nullptr;
             columnsNodes->pop_back();
