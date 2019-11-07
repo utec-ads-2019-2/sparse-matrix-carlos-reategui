@@ -156,9 +156,13 @@ public:
 
     const Matrix<T> operator*(T scalar) const {
         Matrix<T> result(numberOfRows, numberOfColumns);
-        for (sui r = 0; r < numberOfRows; ++r)
-            for (sui c = 0; c < numberOfColumns; ++c)
-                result.set(r, c, this->operator()(r, c) * scalar);
+        for (sui i = 0; i < numberOfRows; ++i) {
+            MatrixNode<T> *currentNode = rowsNodes[i]->link;
+            while (currentNode) {
+                result.set(currentNode->row, currentNode->column, currentNode->data * scalar);
+                currentNode = currentNode->next;
+            }
+        }
         return result;
     }
 

@@ -19,6 +19,10 @@ int main() {
 
     cout << m1.operator==(m2);
 
+    Matrix<int> m3(2, 2);
+    m3 = m1.operator*(5);
+    m3.print();
+
     return EXIT_SUCCESS;
 }
 
