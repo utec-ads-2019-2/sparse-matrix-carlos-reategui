@@ -133,10 +133,24 @@ public:
     }
 
     bool operator==(Matrix<T> other) {
-        for (sui r = 0; r < numberOfRows; ++r)
-            for (sui c = 0; c < numberOfColumns; ++c)
-                if (this->operator()(r, c) != other.operator()(r, c))
+        if (numberOfRows != other.numberOfRows or numberOfColumns != other.numberOfColumns)
+            return false;
+
+        for (sui i = 0; i < numberOfRows; ++i) {
+            SourceNode<T>* rowOfThis = rowsNodes[i], *rowOfOther = other.rowsNodes[i];
+
+            if ((rowOfThis and !rowOfOther) or (!rowOfThis and rowOfOther))
+                return false;
+
+            MatrixNode<T>* currentNodeOfThis = rowOfThis->link, *currentNodeOfOther = rowOfOther->link;
+
+            while (currentNodeOfThis and currentNodeOfOther) {
+                if (currentNodeOfThis->data != currentNodeOfOther->data)
                     return false;
+                currentNodeOfThis = currentNodeOfThis->next;
+                currentNodeOfOther = currentNodeOfOther->next;
+            }
+        }
         return true;
     }
 
@@ -231,7 +245,7 @@ public:
     }
 
     ~Matrix() {
-        while (!rowsNodes.empty()) {
+        /*while (!rowsNodes.empty()) {
             MatrixNode<T>* currentNode = rowsNodes.back()->link;
             while (currentNode) {
                 MatrixNode<T>* temp = currentNode;
@@ -249,7 +263,7 @@ public:
             columnsNodes.pop_back();
             delete temp;
             temp = nullptr;
-        }
+        }*/
     }
 };
 
