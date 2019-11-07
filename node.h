@@ -14,6 +14,8 @@ public:
     MatrixNode(unsigned int row, unsigned int column, T data) : row(row), column(column), data(data), next(nullptr),
     down(nullptr) {}
 
+    ~MatrixNode() {}
+
     friend class Matrix<T>;
 };
 

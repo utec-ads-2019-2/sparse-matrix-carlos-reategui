@@ -61,7 +61,7 @@ public:
                     sourceColumnNode->down = nodeToInsert;
                     nodeToInsert->down = currentNodeOfColumn;
                 } else if (row > currentNodeOfColumn->row) {
-                    while (currentNodeOfColumn->down and currentNodeOfColumn->next->row < row)
+                    while (currentNodeOfColumn->down and currentNodeOfColumn->down->row < row)
                         currentNodeOfColumn = currentNodeOfColumn->down;
                     MatrixNode<T>* aboveNodeToInsert = currentNodeOfColumn,
                     *belowNodeToInsert = currentNodeOfColumn->down;
@@ -102,7 +102,15 @@ public:
         return 0;
     }
 
-    Matrix<T> operator*(T scalar) const {
+    const bool operator==(Matrix<T> other) {
+        for (sui r = 0; r < numberOfRows; ++r)
+            for (sui c = 0; c < numberOfColumns; ++c)
+                if (this->operator()(r, c) != other.operator()(r, c))
+                    return false;
+        return true;
+    }
+
+    const Matrix<T> operator*(T scalar) const {
         Matrix<T> result(numberOfRows, numberOfColumns);
         for (sui r = 0; r < numberOfRows; ++r)
             for (sui c = 0; c < numberOfColumns; ++c)
@@ -110,7 +118,7 @@ public:
         return result;
     }
 
-    Matrix<T> operator*(Matrix<T> other) const {
+    const Matrix<T> operator*(Matrix<T> other) const {
         if (numberOfColumns != other.numberOfRows)
             throw invalid_argument("It is not possible to multiply the given matrices");
 
@@ -134,30 +142,29 @@ public:
         return result;
     }
 
-    Matrix<T> operator+(Matrix<T> other) const {
-        sui maxRows, maxColumns;
-        this->numberOfRows <= other.numberOfRows ? maxRows = other.numberOfRows : maxRows = this->numberOfRows;
-        this->numberOfColumns <= other.numberOfColumns ?  maxColumns = other.numberOfRows : maxColumns = this->numberOfRows;
-        Matrix<T> result(maxRows, maxColumns);
-        for (sui r = 0; r < maxRows; ++r)
-            for (sui c = 0; c < maxColumns; ++c)
+    const Matrix<T> operator+(Matrix<T> other) const {
+        if (numberOfRows != other.numberOfRows or numberOfColumns != other.numberOfColumns)
+            throw invalid_argument("This matrix's rows or/and columns are different from the other matrix");
+
+        Matrix<T> result(numberOfRows, numberOfColumns);
+        for (sui r = 0; r < numberOfRows; ++r)
+            for (sui c = 0; c < numberOfColumns; ++c)
                 result.set(r, c, this->operator()(r, c) + other.operator()(r, c));
         return result;
     }
 
-    Matrix<T> operator-(Matrix<T> other) const {
-        sui maxRows, maxColumns;
-        this->numberOfRows <= other.numberOfRows ? maxRows = other.numberOfRows : maxRows = this->numberOfRows;
-        this->numberOfColumns <= other.numberOfColumns ?  maxColumns = other.numberOfRows : maxColumns = this->numberOfRows;
-        Matrix<T> result(maxRows, maxColumns);
-        for (sui r = 0; r < maxRows; ++r)
-            for (sui c = 0; c < maxColumns; ++c)
+    const Matrix<T> operator-(Matrix<T> other) const {
+        if (numberOfRows != other.numberOfRows or numberOfColumns != other.numberOfColumns)
+            throw invalid_argument("This matrix's rows or/and columns are different from the other matrix");
+
+        Matrix<T> result(numberOfRows, numberOfColumns);
+        for (sui r = 0; r < numberOfRows; ++r)
+            for (sui c = 0; c < numberOfColumns; ++c)
                 result.set(r, c, this->operator()(r, c) - other.operator()(r, c));
         return result;
     }
-
-    // FALTA
-    Matrix<T> transpose() const {
+    
+    const Matrix<T> transpose() const {
         Matrix<T> result(numberOfRows, numberOfColumns);
         if (numberOfColumns < 1 and numberOfRows < 1) {
             if (numberOfRows == numberOfColumns) {
@@ -194,17 +201,37 @@ public:
         }
     }
 
-    // FALTA
     ~Matrix() {
-        while (!rowsNodes->empty()) {
-            delete rowsNodes->back();
+        /*while(!rowsNodes->empty()) {
+            if (rowsNodes->back()->next) {
+                MatrixNode<T>* currentNode = rowsNodes->back()->next, *temp = nullptr;
+                while (currentNode) {
+                    temp = currentNode;
+                    currentNode = currentNode->next;
+                    delete temp;
+                    temp = nullptr;
+                }
+            }
+            SourceRowNode<T>* temp = rowsNodes->back();
+            delete temp;
+            temp = nullptr;
             rowsNodes->pop_back();
         }
-
-        while (!columnsNodes->empty()) {
-            delete columnsNodes->back();
+        while(!columnsNodes->empty()) {
+            if (columnsNodes->back()->down) {
+                MatrixNode<T>* currentNode = columnsNodes->back()->down, *temp = nullptr;
+                while (currentNode) {
+                    temp = currentNode;
+                    currentNode = currentNode->down;
+                    delete temp;
+                    temp = nullptr;
+                }
+            }
+            SourceColumnNode<T>* temp = columnsNodes->back();
+            delete temp;
+            temp = nullptr;
             columnsNodes->pop_back();
-        }
+        }*/
     };
 };
 
