@@ -17,6 +17,7 @@ public:
     ~MatrixNode() {
         next = nullptr;
         down = nullptr;
+        data = 0;
     }
 
     friend class Matrix<T>;

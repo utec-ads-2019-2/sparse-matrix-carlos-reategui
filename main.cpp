@@ -66,8 +66,11 @@ int main() {
     m5->set(1, 0, 3);
     m5->set(1, 1, 4);
 
-
+    m5->print();
     m5->set(0, 0, 0);
+    m5->set(1, 1, 0);
+    m5->print();
+
 
     return EXIT_SUCCESS;
 }

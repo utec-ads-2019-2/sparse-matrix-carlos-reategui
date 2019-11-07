@@ -47,20 +47,28 @@ public:
         SourceNode<T>* sourceColumnNode = columnsNodes[column];
 
         if (findAndReturnNode(row, column) and data == 0) {
-            /*MatrixNode<T>* currentNodeOfRow = sourceRowNode->link;
-            MatrixNode<T>* currentNodeOfColumn = sourceColumnNode->link;
-            if (currentNodeOfRow->column == column) {
-                MatrixNode<T>* onTheRightOfCurrentNodeOfRow = currentNodeOfRow->next;
-                sourceRowNode->link = onTheRightOfCurrentNodeOfRow;
-                delete currentNodeOfRow;
-                currentNodeOfRow = nullptr;
+            MatrixNode<T>* nodeToDelete = findAndReturnNode(row, column),
+            *onTheRightOfNodeToDelete = nodeToDelete->next,
+            *belowNodeToDelete = nodeToDelete->down;
+            if (sourceRowNode->link == nodeToDelete)
+                sourceRowNode->link = onTheRightOfNodeToDelete;
+            else {
+                MatrixNode<T>* onTheLeftOfNodeToDelete = sourceRowNode->link;
+                while (onTheLeftOfNodeToDelete->next != nodeToDelete)
+                    onTheLeftOfNodeToDelete = onTheLeftOfNodeToDelete->next;
+                onTheLeftOfNodeToDelete->next = onTheRightOfNodeToDelete;
             }
-            if (currentNodeOfColumn->row == row) {
-                MatrixNode<T>* belowCurrentNodeOfColumn = currentNodeOfColumn->down;
-                sourceColumnNode->link = belowCurrentNodeOfColumn;
-                delete currentNodeOfColumn;
-                currentNodeOfColumn = nullptr;
-            }*/
+            if (sourceColumnNode->link == nodeToDelete)
+                sourceColumnNode->link = belowNodeToDelete;
+            else {
+                MatrixNode<T>* aboveNodeToDelete = sourceColumnNode->link;
+                while (aboveNodeToDelete->down != nodeToDelete)
+                    aboveNodeToDelete = aboveNodeToDelete->down;
+                aboveNodeToDelete->down = belowNodeToDelete;
+            }
+            delete nodeToDelete;
+            nodeToDelete = nullptr;
+            return;
         }
 
         if (!findAndReturnNode(row, column)) {
@@ -98,10 +106,14 @@ public:
                     nodeToInsert->down = belowNodeToInsert;
                 }
             }
+            return;
         }
 
-        if (findAndReturnNode(row, column) and findAndReturnNode(row, column)->data != data)
+        if (findAndReturnNode(row, column) and findAndReturnNode(row, column)->data != data) {
             findAndReturnNode(row, column)->data = data;
+            return;
+        }
+
     }
 
     T operator()(sui row, sui column) const {
