@@ -30,6 +30,11 @@ protected:
     MatrixNode<T>* link;
 public:
     explicit SourceNode(unsigned int index) : index(index), link(nullptr) {}
+
+    ~SourceNode() {
+        link = nullptr;
+    }
+
     friend class Matrix<T>;
 };
 #endif //SPARSE_MATRIX_NODE_H

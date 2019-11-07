@@ -145,17 +145,11 @@ public:
             throw invalid_argument("It is not possible to multiply the given matrices");
 
         Matrix<T> result(numberOfRows, other.numberOfColumns);
-        for (sui i = 0; i < numberOfColumns; ++i) {
-            vector<T> numbersOfRow(numberOfColumns);
-            for (sui j = 0; j < numberOfColumns; ++j)
-                numbersOfRow[j] = this->operator()(i, j);
-            for (sui j = 0; j < other.numberOfRows; ++j) {
+        for (sui i = 0; i < numberOfRows; ++i) {
+            for (sui j = 0; j < other.numberOfColumns; ++j) {
                 T answer = 0;
-                vector<T> numbersOfColumn(other.numberOfRows);
-                for (sui k = 0; k < other.numberOfRows; ++k)
-                    numbersOfColumn[k] = other.operator()(k, j);
                 for (sui k = 0; k < numberOfColumns; ++k)
-                    answer += numbersOfRow[k] * numbersOfColumn[k];
+                    answer += this->operator()(i, k) * other.operator()(k, j);
                 result.set(i, j, answer);
             }
         }

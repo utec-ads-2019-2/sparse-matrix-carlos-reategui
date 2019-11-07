@@ -34,10 +34,10 @@ int main() {
     m2->print();
 
     auto m3 = new Matrix<int>(2, 2);
-    m3->set(0, 0, 10);
-    m3->set(0, 1, 20);
-    m3->set(1, 0, 30);
-    m3->set(1, 1, 40);
+    m3->set(0, 0, 1);
+    m3->set(0, 1, 2);
+    m3->set(1, 0, 3);
+    m3->set(1, 1, 4);
     m3->print();
 
     auto trans = m2->transpose();
