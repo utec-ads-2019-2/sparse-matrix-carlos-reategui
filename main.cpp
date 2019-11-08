@@ -13,7 +13,7 @@ int main() {
 
     Matrix<int> m1(2, 2);
     m1.set(0, 0, 1);
-    m1.set(0, 1, 2);
+    //m1.set(0, 1, 2);
     m1.set(1, 0, 3);
     m1.set(1, 1, 4);
 
@@ -26,6 +26,7 @@ int main() {
     Matrix<int> m3(2, 2);
     m3 = m1.operator*(5);
     cout << "\tMULTIPLICATION\n" << m3 << endl;
+    cout << "\tMULTIPLICATION 2\n" << m1 << endl;
 
     Matrix<int> m4(3, 3);
     m4.set(0, 0, 1);

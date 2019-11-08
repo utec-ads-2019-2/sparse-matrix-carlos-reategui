@@ -6,6 +6,7 @@
 #include "node.h"
 #include <iomanip>
 #include <list>
+#include <map>
 
 typedef short unsigned int sui;
 using namespace std;
@@ -190,7 +191,7 @@ public:
 
     const Matrix<T> operator*(T scalar) const {
         Matrix<T> result(numberOfRows, numberOfColumns);
-        list<MatrixNode<T>* > previousRow;
+        map<sui, MatrixNode<T>* > previousRow;
         for (int i = numberOfRows - 1; i >= 0; --i) {
             if (rowsNodes[i]->link) {
                 list<MatrixNode<T>* > currentRow;
@@ -201,28 +202,26 @@ public:
                             result.rowsNodes[i]->link = new MatrixNode<T>(currentNode->row, currentNode->column,
                                     currentNode->data * scalar);
                             prevNode = result.rowsNodes[i]->link;
-                            currentRow.push_back(prevNode);
                         } else {
                             prevNode->next = new MatrixNode<T>(currentNode->row, currentNode->column,
                                     currentNode->data * scalar);
                             prevNode = prevNode->next;
-                            currentRow.push_back(prevNode);
                         }
                         if (i != numberOfRows - 1) {
-                            if (prevNode->column == previousRow.front()->column) {
-                                prevNode->down = previousRow.front();
-                                previousRow.pop_front();
+                            if (previousRow[prevNode->column]) {
+                                prevNode->down = previousRow[prevNode->column];
+                                previousRow[prevNode->column] = prevNode;
                             }
                         }
                         currentNode = currentNode->next;
-                        previousRow = currentRow;
+                        previousRow[prevNode->column] = prevNode;
                     }
                 }
-            } else
-                for (auto it = previousRow.begin(); it != previousRow.end(); ++it)
-                    *it = nullptr;
+            }
         }
-
+        for (sui i = 0; i < numberOfColumns; ++i)
+            if (previousRow[i])
+                result.columnsNodes[i]->link = previousRow[i];
         return result;
     }
 
