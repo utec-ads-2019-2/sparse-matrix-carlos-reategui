@@ -187,9 +187,13 @@ public:
             throw invalid_argument("This matrix's rows or/and columns are different from the other matrix");
 
         Matrix<T> result(numberOfRows, numberOfColumns);
-        for (sui r = 0; r < numberOfRows; ++r)
+        /*for (sui r = 0; r < numberOfRows; ++r)
             for (sui c = 0; c < numberOfColumns; ++c)
-                result.set(r, c, this->operator()(r, c) + other.operator()(r, c));
+                result.set(r, c, this->operator()(r, c) + other.operator()(r, c));*/
+
+        for (sui i = 0; i < numberOfRows; ++i) {
+
+        }
         return result;
     }
 
@@ -242,8 +246,21 @@ public:
 
         for (sui i = 0; i < numberOfRows; ++i) {
             cout << setw(setWidth) << "Row " << i;
-            for (sui j = 0; j < numberOfColumns; ++j)
-                cout << setw(setWidth) << this->operator()(i, j);
+            MatrixNode<T> *currentNode = rowsNodes[i]->link;
+            if (currentNode) {
+                for (sui j = 0; j < numberOfColumns and currentNode; ++j) {
+                    cout << setw(setWidth);
+                    if (currentNode->column == j) {
+                        cout << currentNode->data;
+                        currentNode = currentNode->next;
+                    }
+                    else
+                        cout << 0;
+                }
+            } else {
+                for (sui j = 0; j < numberOfColumns; ++j)
+                    cout << setw(setWidth) << 0;
+            }
             cout << endl;
         }
     }
