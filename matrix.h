@@ -5,6 +5,7 @@
 #include <vector>
 #include "node.h"
 #include <iomanip>
+#include <list>
 
 typedef short unsigned int sui;
 using namespace std;
@@ -27,6 +28,26 @@ private:
             currentNode = currentNode->next;
         }
         return nullptr;
+    }
+
+    void operationSumSetRowOfResultIfOneRowIsNullptr(Matrix<T> &result, sui i, const SourceNode<T> *currentRow) const {
+        MatrixNode<T> *currentNode = currentRow->link;
+        for (sui j = 0; j < numberOfColumns; ++j) {
+            if (currentNode->column == j) {
+                result.set(i, j, currentNode->data);
+                currentNode = currentNode->next;
+            }
+        }
+    }
+
+    void operationSubtractionSetRowOfResultIfOneRowIsNullptr(Matrix<T> &result, sui i, const SourceNode<T> *currentRow, const int sign) const {
+        MatrixNode<T> *currentNode = currentRow->link;
+        for (sui j = 0; j < numberOfColumns; ++j) {
+            if (currentNode->column == j) {
+                result.set(i, j, currentNode->data * sign);
+                currentNode = currentNode->next;
+            }
+        }
     }
 
 public:
@@ -124,6 +145,18 @@ public:
         }
     }
 
+    /*const Matrix<T> operator=(Matrix<T> other) {
+        Matrix<T> result(other.numberOfRows, other.numberOfColumns);
+        for (sui i = 0; i < numberOfRows; ++i) {
+            SourceNode<T>* currentRowOfOther = other.rowsNodes[i];
+            if (currentRowOfOther->link) {
+                for (sui j = 0; j < numberOfColumns; ++i) {
+                    SourceNode<T>* currentNodeOfOther
+                }
+            }
+        }
+    }*/
+
     T operator()(sui row, sui column) const {
         MatrixNode<T>* node = findAndReturnNode(row, column);
         if (node)
@@ -157,16 +190,42 @@ public:
 
     const Matrix<T> operator*(T scalar) const {
         Matrix<T> result(numberOfRows, numberOfColumns);
-        for (sui i = 0; i < numberOfRows; ++i) {
-            MatrixNode<T> *currentNode = rowsNodes[i]->link;
-            while (currentNode) {
-                result.set(currentNode->row, currentNode->column, currentNode->data * scalar);
-                currentNode = currentNode->next;
-            }
+        list<MatrixNode<T>* > previousRow;
+        for (int i = numberOfRows - 1; i >= 0; --i) {
+            if (rowsNodes[i]->link) {
+                list<MatrixNode<T>* > currentRow;
+                MatrixNode<T> *currentNode = rowsNodes[i]->link, *prevNode = nullptr;
+                for (sui j = 0; j < numberOfColumns; ++j) {
+                    if (currentNode) {
+                        currentRow.push_back(currentNode);
+                        if (j == 0) {
+                            result.rowsNodes[i]->link = new MatrixNode<T>(currentNode->row, currentNode->column,
+                                    currentNode->data * scalar);
+                            prevNode = result.rowsNodes[i]->link;
+                        } else {
+                            prevNode->next = new MatrixNode<T>(currentNode->row, currentNode->column,
+                                    currentNode->data * scalar);
+                            prevNode = prevNode->next;
+                        }
+                        if (i != numberOfRows - 1) {
+                            if (currentNode->column == previousRow.front()->column) {
+                                currentNode->down = previousRow.front();
+                                previousRow.pop_front();
+                            }
+                        }
+                        currentNode = currentNode->next;
+                        previousRow = currentRow;
+                    }
+                }
+            } else
+                for (auto it = previousRow.begin(); it != previousRow.end(); ++it)
+                    *it = nullptr;
         }
+
         return result;
     }
 
+    // FALTA OPTIMIZAR
     const Matrix<T> operator*(Matrix<T> other) const {
         if (numberOfColumns != other.numberOfRows)
             throw invalid_argument("It is not possible to multiply the given matrices");
@@ -230,26 +289,6 @@ public:
         return result;
     }
 
-    void operationSumSetRowOfResultIfOneRowIsNullptr(Matrix<T> &result, sui i, const SourceNode<T> *currentRow) const {
-        MatrixNode<T> *currentNode = currentRow->link;
-        for (sui j = 0; j < numberOfColumns; ++j) {
-            if (currentNode->column == j) {
-                result.set(i, j, currentNode->data);
-                currentNode = currentNode->next;
-            }
-        }
-    }
-
-    void operationSubtractionSetRowOfResultIfOneRowIsNullptr(Matrix<T> &result, sui i, const SourceNode<T> *currentRow, const int sign) const {
-        MatrixNode<T> *currentNode = currentRow->link;
-        for (sui j = 0; j < numberOfColumns; ++j) {
-            if (currentNode->column == j) {
-                result.set(i, j, currentNode->data * sign);
-                currentNode = currentNode->next;
-            }
-        }
-    }
-
     const Matrix<T> operator-(Matrix<T> other) const {
         if (numberOfRows != other.numberOfRows or numberOfColumns != other.numberOfColumns)
             throw invalid_argument("This matrix's rows or/and columns are different from the other matrix");
@@ -296,7 +335,8 @@ public:
         }
         return result;
     }
-    
+
+    // FALTA OPTIMIZAR
     const Matrix<T> transpose() const {
         Matrix<T> result(numberOfColumns, numberOfRows);
         if (numberOfRows > 1 or numberOfColumns > 1) {

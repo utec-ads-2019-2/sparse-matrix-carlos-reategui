@@ -14,7 +14,7 @@ int main() {
     Matrix<int> m1(2, 2);
     m1.set(0, 0, 1);
     m1.set(0, 1, 2);
-    //m1.set(1, 0, 3);
+    m1.set(1, 0, 3);
     m1.set(1, 1, 4);
 
     Matrix<int> m2(2, 2);
