@@ -145,7 +145,8 @@ public:
             MatrixNode<T>* currentNodeOfThis = rowOfThis->link, *currentNodeOfOther = rowOfOther->link;
 
             while (currentNodeOfThis and currentNodeOfOther) {
-                if (currentNodeOfThis->data != currentNodeOfOther->data)
+                if (currentNodeOfThis->data != currentNodeOfOther->data or
+                currentNodeOfThis->column != currentNodeOfOther->column)
                     return false;
                 currentNodeOfThis = currentNodeOfThis->next;
                 currentNodeOfOther = currentNodeOfOther->next;
@@ -187,14 +188,66 @@ public:
             throw invalid_argument("This matrix's rows or/and columns are different from the other matrix");
 
         Matrix<T> result(numberOfRows, numberOfColumns);
-        /*for (sui r = 0; r < numberOfRows; ++r)
-            for (sui c = 0; c < numberOfColumns; ++c)
-                result.set(r, c, this->operator()(r, c) + other.operator()(r, c));*/
-
         for (sui i = 0; i < numberOfRows; ++i) {
+            SourceNode<T> *currentRowOfThis = rowsNodes[i], *currentRowOfOther = other.rowsNodes[i];
 
+            if (currentRowOfThis->link and !currentRowOfOther->link)
+                operationSumSetRowOfResultIfOneRowIsNullptr(result, i, currentRowOfThis);
+            if (!currentRowOfThis->link and currentRowOfOther->link)
+                operationSumSetRowOfResultIfOneRowIsNullptr(result, i, currentRowOfOther);
+
+            MatrixNode<T> *currentNodeOfThis = currentRowOfThis->link, *currentNodeOfOther = currentRowOfOther->link;
+            for (sui j = 0; j < numberOfColumns; ++j) {
+                if (currentNodeOfThis and currentNodeOfOther) {
+                    if (currentNodeOfThis->column == j and currentNodeOfOther->column == j) {
+                        result.set(i , j, currentNodeOfThis->data + currentNodeOfOther->data);
+                        currentNodeOfThis = currentNodeOfThis->next;
+                        currentNodeOfOther = currentNodeOfOther->next;
+                    } else if (currentNodeOfThis->column == j and currentNodeOfOther->column != j) {
+                        result.set(i , j, currentNodeOfThis->data);
+                        currentNodeOfThis = currentNodeOfThis->next;
+                    } else if (currentNodeOfThis->column != j and currentNodeOfOther->column == j) {
+                        result.set(i, j, currentNodeOfOther->data);
+                        currentNodeOfOther = currentNodeOfOther->next;
+                    }
+                }
+                if (currentNodeOfThis and !currentNodeOfOther) {
+                    if (currentNodeOfThis->column == j) {
+                        result.set(i, j, currentNodeOfThis->data);
+                        currentNodeOfThis = currentNodeOfThis->next;
+                    }
+                }
+                if (!currentNodeOfThis and currentNodeOfOther) {
+                    if (currentNodeOfOther->column == j) {
+                        result.set(i, j, currentNodeOfOther->data);
+                        currentNodeOfOther = currentNodeOfOther->next;
+                    }
+                }
+                if (!currentNodeOfThis and !currentNodeOfOther)
+                    break;
+            }
         }
         return result;
+    }
+
+    void operationSumSetRowOfResultIfOneRowIsNullptr(Matrix<T> &result, sui i, const SourceNode<T> *currentRow) const {
+        MatrixNode<T> *currentNode = currentRow->link;
+        for (sui j = 0; j < numberOfColumns; ++j) {
+            if (currentNode->column == j) {
+                result.set(i, j, currentNode->data);
+                currentNode = currentNode->next;
+            }
+        }
+    }
+
+    void operationSubtractionSetRowOfResultIfOneRowIsNullptr(Matrix<T> &result, sui i, const SourceNode<T> *currentRow, const int sign) const {
+        MatrixNode<T> *currentNode = currentRow->link;
+        for (sui j = 0; j < numberOfColumns; ++j) {
+            if (currentNode->column == j) {
+                result.set(i, j, currentNode->data * sign);
+                currentNode = currentNode->next;
+            }
+        }
     }
 
     const Matrix<T> operator-(Matrix<T> other) const {
@@ -202,9 +255,45 @@ public:
             throw invalid_argument("This matrix's rows or/and columns are different from the other matrix");
 
         Matrix<T> result(numberOfRows, numberOfColumns);
-        for (sui r = 0; r < numberOfRows; ++r)
-            for (sui c = 0; c < numberOfColumns; ++c)
-                result.set(r, c, this->operator()(r, c) - other.operator()(r, c));
+        for (sui i = 0; i < numberOfRows; ++i) {
+            SourceNode<T> *currentRowOfThis = rowsNodes[i], *currentRowOfOther = other.rowsNodes[i];
+
+            if (currentRowOfThis->link and !currentRowOfOther->link)
+                operationSubtractionSetRowOfResultIfOneRowIsNullptr(result, i, currentRowOfThis, 1);
+            if (!currentRowOfThis->link and currentRowOfOther->link)
+                operationSubtractionSetRowOfResultIfOneRowIsNullptr(result, i, currentRowOfOther, - 1);
+
+            MatrixNode<T> *currentNodeOfThis = currentRowOfThis->link, *currentNodeOfOther = currentRowOfOther->link;
+            for (sui j = 0; j < numberOfColumns; ++j) {
+                if (currentNodeOfThis and currentNodeOfOther) {
+                    if (currentNodeOfThis->column == j and currentNodeOfOther->column == j) {
+                        result.set(i , j, currentNodeOfThis->data - currentNodeOfOther->data);
+                        currentNodeOfThis = currentNodeOfThis->next;
+                        currentNodeOfOther = currentNodeOfOther->next;
+                    } else if (currentNodeOfThis->column == j and currentNodeOfOther->column != j) {
+                        result.set(i , j, currentNodeOfThis->data);
+                        currentNodeOfThis = currentNodeOfThis->next;
+                    } else if (currentNodeOfThis->column != j and currentNodeOfOther->column == j) {
+                        result.set(i, j, currentNodeOfOther->data);
+                        currentNodeOfOther = currentNodeOfOther->next;
+                    }
+                }
+                if (currentNodeOfThis and !currentNodeOfOther) {
+                    if (currentNodeOfThis->column == j) {
+                        result.set(i, j, currentNodeOfThis->data);
+                        currentNodeOfThis = currentNodeOfThis->next;
+                    }
+                }
+                if (!currentNodeOfThis and currentNodeOfOther) {
+                    if (currentNodeOfOther->column == j) {
+                        result.set(i, j, currentNodeOfOther->data * -1);
+                        currentNodeOfOther = currentNodeOfOther->next;
+                    }
+                }
+                if (!currentNodeOfThis and !currentNodeOfOther)
+                    break;
+            }
+        }
         return result;
     }
     
@@ -248,19 +337,21 @@ public:
             cout << setw(setWidth) << "Row " << i;
             MatrixNode<T> *currentNode = rowsNodes[i]->link;
             if (currentNode) {
-                for (sui j = 0; j < numberOfColumns and currentNode; ++j) {
+                for (sui j = 0; j < numberOfColumns; ++j) {
                     cout << setw(setWidth);
-                    if (currentNode->column == j) {
-                        cout << currentNode->data;
-                        currentNode = currentNode->next;
-                    }
-                    else
+                    if (currentNode) {
+                        if (currentNode->column == j) {
+                            cout << currentNode->data;
+                            currentNode = currentNode->next;
+                        }
+                        else
+                            cout << 0;
+                    } else
                         cout << 0;
                 }
-            } else {
+            } else
                 for (sui j = 0; j < numberOfColumns; ++j)
                     cout << setw(setWidth) << 0;
-            }
             cout << endl;
         }
     }
