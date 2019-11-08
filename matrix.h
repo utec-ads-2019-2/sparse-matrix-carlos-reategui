@@ -197,19 +197,20 @@ public:
                 MatrixNode<T> *currentNode = rowsNodes[i]->link, *prevNode = nullptr;
                 for (sui j = 0; j < numberOfColumns; ++j) {
                     if (currentNode) {
-                        currentRow.push_back(currentNode);
                         if (j == 0) {
                             result.rowsNodes[i]->link = new MatrixNode<T>(currentNode->row, currentNode->column,
                                     currentNode->data * scalar);
                             prevNode = result.rowsNodes[i]->link;
+                            currentRow.push_back(prevNode);
                         } else {
                             prevNode->next = new MatrixNode<T>(currentNode->row, currentNode->column,
                                     currentNode->data * scalar);
                             prevNode = prevNode->next;
+                            currentRow.push_back(prevNode);
                         }
                         if (i != numberOfRows - 1) {
-                            if (currentNode->column == previousRow.front()->column) {
-                                currentNode->down = previousRow.front();
+                            if (prevNode->column == previousRow.front()->column) {
+                                prevNode->down = previousRow.front();
                                 previousRow.pop_front();
                             }
                         }
