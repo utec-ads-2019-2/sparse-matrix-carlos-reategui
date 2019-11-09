@@ -9,7 +9,7 @@ class MatrixNode {
 protected:
     T data;
     unsigned int row, column;
-    MatrixNode<T>* next, *down;
+    MatrixNode<T> *next, *down;
 public:
     MatrixNode(unsigned int row, unsigned int column, T data) : row(row), column(column), data(data), next(nullptr),
     down(nullptr) {}

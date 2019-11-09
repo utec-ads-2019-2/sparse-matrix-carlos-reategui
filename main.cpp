@@ -9,7 +9,7 @@ ostream& operator<<(ostream& os, Matrix<T> &matrix) {
 }
 
 int main() {
-    //Tester::execute();
+    Tester::execute();
 
     Matrix<int> m1(2, 2);
     m1.set(0, 0, 1);
@@ -70,6 +70,19 @@ int main() {
 
     Matrix<int> resultOfSubtraction = m7.operator-(m8);
     cout << "\tSUBTRACTION\n" << resultOfSubtraction << endl;
+
+    Matrix<int> m9(2, 3);
+    //m9.set(0, 0, 1);
+    m9.set(0, 1, 2);
+    m9.set(0, 2, 3);
+    m9.set(1, 0, 4);
+    m9.set(1, 1, 5);
+    m9.set(1, 2, 6);
+    cout << m9 << endl;
+
+    Matrix<int> transpose = m9.transpose();
+    cout << "\tTRANSPOSE\n" << transpose << endl;
+
     return EXIT_SUCCESS;
 }
 
