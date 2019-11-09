@@ -18,6 +18,7 @@ private:
     vector<SourceNode<T>* > columnsNodes;
     sui numberOfRows, numberOfColumns;
 
+    // O(n)
     MatrixNode<T>* findAndReturnNode(sui row, sui column) const {
         if (row > numberOfRows or column > numberOfColumns)
             throw invalid_argument("Index out of range");
@@ -60,6 +61,7 @@ public:
             columnsNodes.push_back(new SourceNode<T>(i));
     }
 
+    // O(n)
     void set(sui row, sui column, T data) {
         if (row > numberOfRows or column > numberOfColumns)
             throw invalid_argument("Index out of range");
@@ -146,6 +148,7 @@ public:
         }
     }
 
+    // O(n)
     T operator()(sui row, sui column) const {
         MatrixNode<T>* node = findAndReturnNode(row, column);
         if (node)
@@ -154,17 +157,18 @@ public:
             return 0;
     }
 
+    // O(n^2)
     bool operator==(Matrix<T> other) {
         if (numberOfRows != other.numberOfRows or numberOfColumns != other.numberOfColumns)
             return false;
 
         for (sui i = 0; i < numberOfRows; ++i) {
-            SourceNode<T>* rowOfThis = rowsNodes[i], *rowOfOther = other.rowsNodes[i];
+            SourceNode<T> *rowOfThis = rowsNodes[i], *rowOfOther = other.rowsNodes[i];
 
             if ((rowOfThis and !rowOfOther) or (!rowOfThis and rowOfOther))
                 return false;
 
-            MatrixNode<T>* currentNodeOfThis = rowOfThis->link, *currentNodeOfOther = rowOfOther->link;
+            MatrixNode<T> *currentNodeOfThis = rowOfThis->link, *currentNodeOfOther = rowOfOther->link;
 
             while (currentNodeOfThis and currentNodeOfOther) {
                 if (currentNodeOfThis->data != currentNodeOfOther->data or
@@ -177,9 +181,10 @@ public:
         return true;
     }
 
+    // O(n^2)
     const Matrix<T> operator*(T scalar) const {
         Matrix<T> result(numberOfRows, numberOfColumns);
-        map<sui, MatrixNode<T>* > previousRow;
+        map<sui, MatrixNode<T>* > rowsBelow;
         for (int i = numberOfRows - 1; i >= 0; --i) {
             if (rowsNodes[i]->link) {
                 list<MatrixNode<T>* > currentRow;
@@ -195,38 +200,72 @@ public:
                                     currentNode->data * scalar);
                             currentNodeOfResult = currentNodeOfResult->next;
                         }
-                        if (i != numberOfRows - 1) {
-                            if (previousRow[currentNodeOfResult->column]) {
-                                currentNodeOfResult->down = previousRow[currentNodeOfResult->column];
-                                previousRow[currentNodeOfResult->column] = currentNodeOfResult;
-                            }
+                        if (rowsBelow[currentNodeOfResult->column]) {
+                            currentNodeOfResult->down = rowsBelow[currentNodeOfResult->column];
+                            rowsBelow[currentNodeOfResult->column] = currentNodeOfResult;
                         }
                         currentNode = currentNode->next;
-                        previousRow[currentNodeOfResult->column] = currentNodeOfResult;
+                        rowsBelow[currentNodeOfResult->column] = currentNodeOfResult;
                     }
                 }
             }
         }
         for (sui i = 0; i < numberOfColumns; ++i)
-            if (previousRow[i])
-                result.columnsNodes[i]->link = previousRow[i];
+            if (rowsBelow[i])
+                result.columnsNodes[i]->link = rowsBelow[i];
         return result;
     }
 
-    // FALTA OPTIMIZAR
+    // O(n^3)
     const Matrix<T> operator*(Matrix<T> other) const {
         if (numberOfColumns != other.numberOfRows)
             throw invalid_argument("It is not possible to multiply the given matrices");
 
         Matrix<T> result(numberOfRows, other.numberOfColumns);
-        for (sui i = 0; i < numberOfRows; ++i) {
-            for (sui j = 0; j < other.numberOfColumns; ++j) {
-                T answer = 0;
-                for (sui k = 0; k < numberOfColumns; ++k)
-                    answer += this->operator()(i, k) * other.operator()(k, j);
-                result.set(i, j, answer);
+        map<sui, MatrixNode<T>* > rowsBelow;
+        for (int i = numberOfRows - 1; i >= 0; --i) {
+            if (rowsNodes[i]->link) {
+                MatrixNode<T> *currentNodeOfResult = nullptr;
+                for (sui j = 0; j < result.numberOfColumns; ++j) {
+                    if (other.columnsNodes[j]->link) {
+                        unsigned int answer = 0;
+                        MatrixNode<T> *currentNodeOfThis = rowsNodes[i]->link,
+                        *currentNodeOfOther = other.columnsNodes[j]->link;
+                        if (currentNodeOfThis and currentNodeOfOther) {
+                            while (currentNodeOfThis and currentNodeOfOther) {
+                                if (currentNodeOfThis->column == currentNodeOfOther->row) {
+                                    answer += currentNodeOfThis->data * currentNodeOfOther->data;
+                                    currentNodeOfThis = currentNodeOfThis->next;
+                                    currentNodeOfOther = currentNodeOfOther->down;
+                                    continue;
+                                }
+                                if (currentNodeOfThis->column < currentNodeOfOther->row) {
+                                    currentNodeOfThis = currentNodeOfThis->next;
+                                    continue;
+                                }
+                                if (currentNodeOfOther->row < currentNodeOfThis->column) {
+                                    currentNodeOfOther = currentNodeOfOther->down;
+                                    continue;
+                                }
+                            }
+                            if (!result.rowsNodes[i]->link) {
+                                result.rowsNodes[i]->link = new MatrixNode<T>(i, j, answer);
+                                currentNodeOfResult = result.rowsNodes[i]->link;
+                            } else {
+                                currentNodeOfResult->next = new MatrixNode<T>(i, j, answer);
+                                currentNodeOfResult = currentNodeOfResult->next;
+                            }
+                            if (rowsBelow[currentNodeOfResult->column])
+                                currentNodeOfResult->down = rowsBelow[currentNodeOfResult->column];
+                            rowsBelow[currentNodeOfResult->column] = currentNodeOfResult;
+                        }
+                    }
+                }
             }
         }
+        for (sui i = 0; i < result.numberOfColumns; ++i)
+            if (rowsBelow[i])
+                result.columnsNodes[i]->link = rowsBelow[i];
         return result;
     }
 
@@ -324,11 +363,11 @@ public:
         return result;
     }
 
-    // FALTA OPTIMIZAR
+    // O(n^2)
     const Matrix<T> transpose() const {
         if (numberOfRows > 1 or numberOfColumns > 1) {
             Matrix<T> result(numberOfColumns, numberOfRows);
-            map<sui, MatrixNode<T>* > previousColumn;
+            map<sui, MatrixNode<T>* > columnOntTheRightOfCurrentColumn;
             for (int i = numberOfRows - 1; i >= 0; --i) {
                 if (rowsNodes[i]->link) {
                     MatrixNode<T> *currentNodeOfThis = rowsNodes[i]->link, *currentNodeOfResult = nullptr;
@@ -336,30 +375,29 @@ public:
                             currentNodeOfThis->data);
                     currentNodeOfThis = currentNodeOfThis->next;
                     currentNodeOfResult = result.columnsNodes[i]->link;
-                    if (previousColumn[currentNodeOfResult->row])
-                        currentNodeOfResult->next = previousColumn[currentNodeOfResult->row];
-                    previousColumn[currentNodeOfResult->row] = currentNodeOfResult;
+                    if (columnOntTheRightOfCurrentColumn[currentNodeOfResult->row])
+                        currentNodeOfResult->next = columnOntTheRightOfCurrentColumn[currentNodeOfResult->row];
+                    columnOntTheRightOfCurrentColumn[currentNodeOfResult->row] = currentNodeOfResult;
                     while (currentNodeOfThis) {
                         currentNodeOfResult->down = new MatrixNode<T>(currentNodeOfThis->column, currentNodeOfThis->row,
                                 currentNodeOfThis->data);
                         currentNodeOfResult = currentNodeOfResult->down;
                         currentNodeOfThis = currentNodeOfThis->next;
-                        if (previousColumn[currentNodeOfResult->row])
-                            currentNodeOfResult->next = previousColumn[currentNodeOfResult->row];
-                        previousColumn[currentNodeOfResult->row] = currentNodeOfResult;
+                        if (columnOntTheRightOfCurrentColumn[currentNodeOfResult->row])
+                            currentNodeOfResult->next = columnOntTheRightOfCurrentColumn[currentNodeOfResult->row];
+                        columnOntTheRightOfCurrentColumn[currentNodeOfResult->row] = currentNodeOfResult;
                     }
                 }
             }
-            for (sui i = 0; i < result.numberOfRows; ++i) {
-                if (previousColumn[i]) {
-                    result.rowsNodes[i]->link = previousColumn[i];
-                }
-            }
+            for (sui i = 0; i < result.numberOfRows; ++i)
+                if (columnOntTheRightOfCurrentColumn[i])
+                    result.rowsNodes[i]->link = columnOntTheRightOfCurrentColumn[i];
             return result;
         }
         return *this;
     }
 
+    // O(n^2)
     void print() const {
         sui setWidth = 10;
         for (sui i = 0; i < numberOfColumns; ++i) {

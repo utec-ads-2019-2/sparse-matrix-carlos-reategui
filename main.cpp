@@ -82,6 +82,21 @@ int main() {
 
     Matrix<int> transpose = m9.transpose();
     cout << "\tTRANSPOSE\n" << transpose << endl;
+    
+    Matrix<int> m10(2, 2);
+    m10.set(0, 0, 1);
+    m10.set(0, 1, 2);
+    m10.set(1, 0, 3);
+    m10.set(1, 1, 4);
+    
+    Matrix<int> m11(2, 2);
+    m11.set(0, 0, 1);
+    m11.set(0, 1, 2);
+    m11.set(1, 0, 3);
+    m11.set(1, 1, 4);
+
+    Matrix<int> multiplication = m10.operator*(m11);
+    cout << "\tMULTIPLICATION\n" << multiplication << endl;
 
     return EXIT_SUCCESS;
 }
