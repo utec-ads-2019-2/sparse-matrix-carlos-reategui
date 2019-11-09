@@ -32,26 +32,6 @@ private:
         return nullptr;
     }
 
-    void operationSumSetRowOfResultIfOneRowIsNullptr(Matrix<T> &result, sui i, const SourceNode<T> *currentRow) const {
-        MatrixNode<T> *currentNode = currentRow->link;
-        for (sui j = 0; j < numberOfColumns; ++j) {
-            if (currentNode->column == j) {
-                result.set(i, j, currentNode->data);
-                currentNode = currentNode->next;
-            }
-        }
-    }
-
-    void operationSubtractionSetRowOfResultIfOneRowIsNullptr(Matrix<T> &result, sui i, const SourceNode<T> *currentRow, const int sign) const {
-        MatrixNode<T> *currentNode = currentRow->link;
-        for (sui j = 0; j < numberOfColumns; ++j) {
-            if (currentNode->column == j) {
-                result.set(i, j, currentNode->data * sign);
-                currentNode = currentNode->next;
-            }
-        }
-    }
-
 public:
     Matrix(sui rows, sui columns) : numberOfRows(rows), numberOfColumns(columns) {
         for (sui i = 0; i < rows; ++i)
@@ -63,7 +43,7 @@ public:
 
     // O(n)
     void set(sui row, sui column, T data) {
-        if (row > numberOfRows or column > numberOfColumns)
+        if (row > numberOfRows or column > numberOfColumns or row < 0 or column < 0)
             throw invalid_argument("Index out of range");
 
 
@@ -239,14 +219,10 @@ public:
                                     currentNodeOfOther = currentNodeOfOther->down;
                                     continue;
                                 }
-                                if (currentNodeOfThis->column < currentNodeOfOther->row) {
+                                if (currentNodeOfThis->column < currentNodeOfOther->row)
                                     currentNodeOfThis = currentNodeOfThis->next;
-                                    continue;
-                                }
-                                if (currentNodeOfOther->row < currentNodeOfThis->column) {
+                                if (currentNodeOfOther->row < currentNodeOfThis->column)
                                     currentNodeOfOther = currentNodeOfOther->down;
-                                    continue;
-                                }
                             }
                             if (!result.rowsNodes[i]->link) {
                                 result.rowsNodes[i]->link = new MatrixNode<T>(i, j, answer);
@@ -269,132 +245,196 @@ public:
         return result;
     }
 
+    // O(n^2)
     const Matrix<T> operator+(Matrix<T> other) const {
         if (numberOfRows != other.numberOfRows or numberOfColumns != other.numberOfColumns)
             throw invalid_argument("This matrix's rows or/and columns are different from the other matrix");
 
         Matrix<T> result(numberOfRows, numberOfColumns);
-        for (sui i = 0; i < numberOfRows; ++i) {
-            SourceNode<T> *currentRowOfThis = rowsNodes[i], *currentRowOfOther = other.rowsNodes[i];
-
-            if (currentRowOfThis->link and !currentRowOfOther->link)
-                operationSumSetRowOfResultIfOneRowIsNullptr(result, i, currentRowOfThis);
-            if (!currentRowOfThis->link and currentRowOfOther->link)
-                operationSumSetRowOfResultIfOneRowIsNullptr(result, i, currentRowOfOther);
-
-            MatrixNode<T> *currentNodeOfThis = currentRowOfThis->link, *currentNodeOfOther = currentRowOfOther->link;
-            for (sui j = 0; j < numberOfColumns; ++j) {
-                if (currentNodeOfThis and currentNodeOfOther) {
-                    if (currentNodeOfThis->column == j and currentNodeOfOther->column == j) {
-                        result.set(i , j, currentNodeOfThis->data + currentNodeOfOther->data);
+        map<sui, MatrixNode<T>* > rowsBelow;
+        for (int i = numberOfRows - 1; i >= 0; --i) {
+            MatrixNode<T> *currentNodeOfResult = nullptr;
+            if (rowsNodes[i]->link and other.rowsNodes[i]->link) {
+                MatrixNode<T> *currentNodeOfThis = rowsNodes[i]->link, *currentNodeOfOther = other.rowsNodes[i]->link;
+                while(currentNodeOfThis and currentNodeOfOther) {
+                    if (currentNodeOfThis->column == currentNodeOfOther->column) {
+                        if (!result.rowsNodes[i]->link) {
+                            result.rowsNodes[i]->link = new MatrixNode<T>(i, currentNodeOfThis->column, 
+                                    currentNodeOfThis->data + currentNodeOfOther->data);
+                            currentNodeOfResult = result.rowsNodes[i]->link;
+                        } else {
+                            currentNodeOfResult->next = new MatrixNode<T>(i, currentNodeOfThis->column,
+                                    currentNodeOfThis->data + currentNodeOfOther->data);
+                            currentNodeOfResult = currentNodeOfResult->next;
+                        }
+                        if (rowsBelow[currentNodeOfResult->column])
+                            currentNodeOfResult->down = rowsBelow[currentNodeOfResult->column];
+                        rowsBelow[currentNodeOfResult->column] = currentNodeOfResult;
                         currentNodeOfThis = currentNodeOfThis->next;
                         currentNodeOfOther = currentNodeOfOther->next;
-                    } else if (currentNodeOfThis->column == j and currentNodeOfOther->column != j) {
-                        result.set(i , j, currentNodeOfThis->data);
+                        continue;
+                    }
+                    if (currentNodeOfThis->column < currentNodeOfOther->column)
                         currentNodeOfThis = currentNodeOfThis->next;
-                    } else if (currentNodeOfThis->column != j and currentNodeOfOther->column == j) {
-                        result.set(i, j, currentNodeOfOther->data);
+                    if (currentNodeOfOther->column < currentNodeOfThis->column)
                         currentNodeOfOther = currentNodeOfOther->next;
-                    }
                 }
-                if (currentNodeOfThis and !currentNodeOfOther) {
-                    if (currentNodeOfThis->column == j) {
-                        result.set(i, j, currentNodeOfThis->data);
-                        currentNodeOfThis = currentNodeOfThis->next;
+                
+                
+            }
+            if (rowsNodes[i]->link and !other.rowsNodes[i]->link) {
+                MatrixNode<T> *currentNodeOfThis = rowsNodes[i]->link;
+                while (currentNodeOfThis) {
+                    if (!result.rowsNodes[i]->link) {
+                        result.rowsNodes[i]->link = new MatrixNode<T>(i, currentNodeOfThis->column, 
+                                currentNodeOfThis->data);
+                        currentNodeOfResult = result.rowsNodes[i]->link;
+                    } else {
+                        currentNodeOfResult->next = new MatrixNode<T>(i, currentNodeOfThis->column,
+                                currentNodeOfThis->data);
+                        currentNodeOfResult = currentNodeOfResult->next;
                     }
+                    if (rowsBelow[currentNodeOfResult->column])
+                        currentNodeOfResult->down = rowsBelow[currentNodeOfResult->column];
+                    rowsBelow[currentNodeOfResult->column] = currentNodeOfResult;
+                    currentNodeOfThis = currentNodeOfThis->next;
                 }
-                if (!currentNodeOfThis and currentNodeOfOther) {
-                    if (currentNodeOfOther->column == j) {
-                        result.set(i, j, currentNodeOfOther->data);
-                        currentNodeOfOther = currentNodeOfOther->next;
+            }
+            if (!rowsNodes[i]->link and other.rowsNodes[i]->link) {
+                MatrixNode<T> *currentNodeOfOther = other.rowsNodes[i]->link;
+                while (currentNodeOfOther) {
+                    if (!result.rowsNodes[i]->link) {
+                        result.rowsNodes[i]->link = new MatrixNode<T>(i, currentNodeOfOther->column,
+                                                                      currentNodeOfOther->data);
+                        currentNodeOfResult = result.rowsNodes[i]->link;
+                    } else {
+                        currentNodeOfResult->next = new MatrixNode<T>(i, currentNodeOfOther->column,
+                                                                      currentNodeOfOther->data);
+                        currentNodeOfResult = currentNodeOfResult->next;
                     }
+                    if (rowsBelow[currentNodeOfResult->column])
+                        currentNodeOfResult->down = rowsBelow[currentNodeOfResult->column];
+                    rowsBelow[currentNodeOfResult->column] = currentNodeOfResult;
+                    currentNodeOfOther = currentNodeOfOther->next;
                 }
-                if (!currentNodeOfThis and !currentNodeOfOther)
-                    break;
             }
         }
+        for (sui i = 0; i < result.numberOfColumns; ++i)
+            if (rowsBelow[i])
+                result.columnsNodes[i]->link = rowsBelow[i];
         return result;
     }
 
+    // O(n^2)
     const Matrix<T> operator-(Matrix<T> other) const {
         if (numberOfRows != other.numberOfRows or numberOfColumns != other.numberOfColumns)
             throw invalid_argument("This matrix's rows or/and columns are different from the other matrix");
 
         Matrix<T> result(numberOfRows, numberOfColumns);
-        for (sui i = 0; i < numberOfRows; ++i) {
-            SourceNode<T> *currentRowOfThis = rowsNodes[i], *currentRowOfOther = other.rowsNodes[i];
+        map<sui, MatrixNode<T>* > rowsBelow;
+        for (int i = numberOfRows - 1; i >= 0; --i) {
+            MatrixNode<T> *currentNodeOfResult = nullptr;
+            if (rowsNodes[i]->link and other.rowsNodes[i]->link) {
+                MatrixNode<T> *currentNodeOfThis = rowsNodes[i]->link, *currentNodeOfOther = other.rowsNodes[i]->link;
+                while(currentNodeOfThis and currentNodeOfOther) {
+                    if (currentNodeOfThis->column == currentNodeOfOther->column) {
+                        if (!result.rowsNodes[i]->link) {
+                            result.rowsNodes[i]->link = new MatrixNode<T>(i, currentNodeOfThis->column,
+                                    currentNodeOfThis->data - currentNodeOfOther->data);
+                            currentNodeOfResult = result.rowsNodes[i]->link;
+                        } else {
+                            currentNodeOfResult->next = new MatrixNode<T>(i, currentNodeOfThis->column,
+                                    currentNodeOfThis->data - currentNodeOfOther->data);
+                            currentNodeOfResult = currentNodeOfResult->next;
+                        }
+                        if (rowsBelow[currentNodeOfResult->column])
+                            currentNodeOfResult->down = rowsBelow[currentNodeOfResult->column];
+                        rowsBelow[currentNodeOfResult->column] = currentNodeOfResult;
+                        currentNodeOfThis = currentNodeOfThis->next;
+                        currentNodeOfOther = currentNodeOfOther->next;
+                        continue;
+                    }
+                    if (currentNodeOfThis->column < currentNodeOfOther->column)
+                        currentNodeOfThis = currentNodeOfThis->next;
+                    if (currentNodeOfOther->column < currentNodeOfThis->column)
+                        currentNodeOfOther = currentNodeOfOther->next;
+                }
 
-            if (currentRowOfThis->link and !currentRowOfOther->link)
-                operationSubtractionSetRowOfResultIfOneRowIsNullptr(result, i, currentRowOfThis, 1);
-            if (!currentRowOfThis->link and currentRowOfOther->link)
-                operationSubtractionSetRowOfResultIfOneRowIsNullptr(result, i, currentRowOfOther, - 1);
 
-            MatrixNode<T> *currentNodeOfThis = currentRowOfThis->link, *currentNodeOfOther = currentRowOfOther->link;
-            for (sui j = 0; j < numberOfColumns; ++j) {
-                if (currentNodeOfThis and currentNodeOfOther) {
-                    if (currentNodeOfThis->column == j and currentNodeOfOther->column == j) {
-                        result.set(i , j, currentNodeOfThis->data - currentNodeOfOther->data);
-                        currentNodeOfThis = currentNodeOfThis->next;
-                        currentNodeOfOther = currentNodeOfOther->next;
-                    } else if (currentNodeOfThis->column == j and currentNodeOfOther->column != j) {
-                        result.set(i , j, currentNodeOfThis->data);
-                        currentNodeOfThis = currentNodeOfThis->next;
-                    } else if (currentNodeOfThis->column != j and currentNodeOfOther->column == j) {
-                        result.set(i, j, currentNodeOfOther->data);
-                        currentNodeOfOther = currentNodeOfOther->next;
+            }
+            if (rowsNodes[i]->link and !other.rowsNodes[i]->link) {
+                MatrixNode<T> *currentNodeOfThis = rowsNodes[i]->link;
+                while (currentNodeOfThis) {
+                    if (!result.rowsNodes[i]->link) {
+                        result.rowsNodes[i]->link = new MatrixNode<T>(i, currentNodeOfThis->column,
+                                                                      currentNodeOfThis->data);
+                        currentNodeOfResult = result.rowsNodes[i]->link;
+                    } else {
+                        currentNodeOfResult->next = new MatrixNode<T>(i, currentNodeOfThis->column,
+                                                                      currentNodeOfThis->data);
+                        currentNodeOfResult = currentNodeOfResult->next;
                     }
+                    if (rowsBelow[currentNodeOfResult->column])
+                        currentNodeOfResult->down = rowsBelow[currentNodeOfResult->column];
+                    rowsBelow[currentNodeOfResult->column] = currentNodeOfResult;
+                    currentNodeOfThis = currentNodeOfThis->next;
                 }
-                if (currentNodeOfThis and !currentNodeOfOther) {
-                    if (currentNodeOfThis->column == j) {
-                        result.set(i, j, currentNodeOfThis->data);
-                        currentNodeOfThis = currentNodeOfThis->next;
+            }
+            if (!rowsNodes[i]->link and other.rowsNodes[i]->link) {
+                MatrixNode<T> *currentNodeOfOther = other.rowsNodes[i]->link;
+                while (currentNodeOfOther) {
+                    if (!result.rowsNodes[i]->link) {
+                        result.rowsNodes[i]->link = new MatrixNode<T>(i, currentNodeOfOther->column,
+                                                                      currentNodeOfOther->data * -1);
+                        currentNodeOfResult = result.rowsNodes[i]->link;
+                    } else {
+                        currentNodeOfResult->next = new MatrixNode<T>(i, currentNodeOfOther->column,
+                                                                      currentNodeOfOther->data * -1);
+                        currentNodeOfResult = currentNodeOfResult->next;
                     }
+                    if (rowsBelow[currentNodeOfResult->column])
+                        currentNodeOfResult->down = rowsBelow[currentNodeOfResult->column];
+                    rowsBelow[currentNodeOfResult->column] = currentNodeOfResult;
+                    currentNodeOfOther = currentNodeOfOther->next;
                 }
-                if (!currentNodeOfThis and currentNodeOfOther) {
-                    if (currentNodeOfOther->column == j) {
-                        result.set(i, j, currentNodeOfOther->data * -1);
-                        currentNodeOfOther = currentNodeOfOther->next;
-                    }
-                }
-                if (!currentNodeOfThis and !currentNodeOfOther)
-                    break;
             }
         }
+        for (sui i = 0; i < result.numberOfColumns; ++i)
+            if (rowsBelow[i])
+                result.columnsNodes[i]->link = rowsBelow[i];
+        return result;
         return result;
     }
 
     // O(n^2)
     const Matrix<T> transpose() const {
-        if (numberOfRows > 1 or numberOfColumns > 1) {
-            Matrix<T> result(numberOfColumns, numberOfRows);
-            map<sui, MatrixNode<T>* > columnOntTheRightOfCurrentColumn;
-            for (int i = numberOfRows - 1; i >= 0; --i) {
-                if (rowsNodes[i]->link) {
-                    MatrixNode<T> *currentNodeOfThis = rowsNodes[i]->link, *currentNodeOfResult = nullptr;
-                    result.columnsNodes[i]->link = new MatrixNode<T>(currentNodeOfThis->column, currentNodeOfThis->row,
+        Matrix<T> result(numberOfColumns, numberOfRows);
+        map<sui, MatrixNode<T>* > columnOntTheRightOfCurrentColumn;
+        for (int i = numberOfRows - 1; i >= 0; --i) {
+            if (rowsNodes[i]->link) {
+                MatrixNode<T> *currentNodeOfThis = rowsNodes[i]->link, *currentNodeOfResult = nullptr;
+                result.columnsNodes[i]->link = new MatrixNode<T>(currentNodeOfThis->column, currentNodeOfThis->row,
+                        currentNodeOfThis->data);
+                currentNodeOfThis = currentNodeOfThis->next;
+                currentNodeOfResult = result.columnsNodes[i]->link;
+                if (columnOntTheRightOfCurrentColumn[currentNodeOfResult->row])
+                    currentNodeOfResult->next = columnOntTheRightOfCurrentColumn[currentNodeOfResult->row];
+                columnOntTheRightOfCurrentColumn[currentNodeOfResult->row] = currentNodeOfResult;
+                while (currentNodeOfThis) {
+                    currentNodeOfResult->down = new MatrixNode<T>(currentNodeOfThis->column, currentNodeOfThis->row,
                             currentNodeOfThis->data);
+                    currentNodeOfResult = currentNodeOfResult->down;
                     currentNodeOfThis = currentNodeOfThis->next;
-                    currentNodeOfResult = result.columnsNodes[i]->link;
                     if (columnOntTheRightOfCurrentColumn[currentNodeOfResult->row])
                         currentNodeOfResult->next = columnOntTheRightOfCurrentColumn[currentNodeOfResult->row];
                     columnOntTheRightOfCurrentColumn[currentNodeOfResult->row] = currentNodeOfResult;
-                    while (currentNodeOfThis) {
-                        currentNodeOfResult->down = new MatrixNode<T>(currentNodeOfThis->column, currentNodeOfThis->row,
-                                currentNodeOfThis->data);
-                        currentNodeOfResult = currentNodeOfResult->down;
-                        currentNodeOfThis = currentNodeOfThis->next;
-                        if (columnOntTheRightOfCurrentColumn[currentNodeOfResult->row])
-                            currentNodeOfResult->next = columnOntTheRightOfCurrentColumn[currentNodeOfResult->row];
-                        columnOntTheRightOfCurrentColumn[currentNodeOfResult->row] = currentNodeOfResult;
-                    }
                 }
             }
-            for (sui i = 0; i < result.numberOfRows; ++i)
-                if (columnOntTheRightOfCurrentColumn[i])
-                    result.rowsNodes[i]->link = columnOntTheRightOfCurrentColumn[i];
-            return result;
         }
-        return *this;
+        for (sui i = 0; i < result.numberOfRows; ++i)
+            if (columnOntTheRightOfCurrentColumn[i])
+                result.rowsNodes[i]->link = columnOntTheRightOfCurrentColumn[i];
+        return result;
     }
 
     // O(n^2)

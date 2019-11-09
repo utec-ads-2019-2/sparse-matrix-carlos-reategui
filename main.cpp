@@ -13,7 +13,7 @@ int main() {
 
     Matrix<int> m1(2, 2);
     m1.set(0, 0, 1);
-    //m1.set(0, 1, 2);
+    m1.set(0, 1, 2);
     m1.set(1, 0, 3);
     m1.set(1, 1, 4);
 
@@ -83,20 +83,24 @@ int main() {
     Matrix<int> transpose = m9.transpose();
     cout << "\tTRANSPOSE\n" << transpose << endl;
     
-    Matrix<int> m10(2, 2);
+    Matrix<int> m10(2, 3);
     m10.set(0, 0, 1);
     m10.set(0, 1, 2);
-    m10.set(1, 0, 3);
-    m10.set(1, 1, 4);
-    
-    Matrix<int> m11(2, 2);
+    m10.set(0, 2, 3);
+    m10.set(1, 0, 4);
+    m10.set(1, 1, 5);
+    m10.set(1, 2, 6);
+
+    Matrix<int> m11(3, 2);
     m11.set(0, 0, 1);
     m11.set(0, 1, 2);
     m11.set(1, 0, 3);
     m11.set(1, 1, 4);
+    m11.set(2, 0, 5);
+    m11.set(2, 1, 6);
 
     Matrix<int> multiplication = m10.operator*(m11);
-    cout << "\tMULTIPLICATION\n" << multiplication << endl;
+    cout << "\tMULTIPLICATION OF MATRICES\n" << multiplication << endl;
 
     return EXIT_SUCCESS;
 }
