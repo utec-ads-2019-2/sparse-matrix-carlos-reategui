@@ -102,6 +102,13 @@ int main() {
     Matrix<int> multiplication = m10.operator*(m11);
     cout << "\tMULTIPLICATION OF MATRICES\n" << multiplication << endl;
 
+    auto *matrixToDelete = new Matrix<int>(2, 2);
+    matrixToDelete->set(0, 0, 1);
+    matrixToDelete->set(0, 1, 2);
+    matrixToDelete->set(1, 0, 3);
+    matrixToDelete->set(1, 1, 4);
+    delete matrixToDelete;
+
     return EXIT_SUCCESS;
 }
 

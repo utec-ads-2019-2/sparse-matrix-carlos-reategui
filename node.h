@@ -17,7 +17,7 @@ public:
     ~MatrixNode() {
         next = nullptr;
         down = nullptr;
-        data = 0;
+        data = row = column = 0;
     }
 
     friend class Matrix<T>;
@@ -33,6 +33,7 @@ public:
 
     ~SourceNode() {
         link = nullptr;
+        index = 0;
     }
 
     friend class Matrix<T>;
