@@ -32,6 +32,27 @@ private:
         return nullptr;
     }
 
+
+    void operationAdditionFillRowOfResultIfASourceNodeIsNullptr(const Matrix<T> &matrix, int i,
+            MatrixNode<T> *currentNodeOfResult, Matrix<T> &result, map<sui, MatrixNode<T> *> &rowsBelow) const {
+        MatrixNode<T> *currentNodeOfOther = matrix.rowsNodes[i]->link;
+        while (currentNodeOfOther) {
+            if (!result.rowsNodes[i]->link) {
+                result.rowsNodes[i]->link = new MatrixNode<T>(i, currentNodeOfOther->column,
+                                                              currentNodeOfOther->data);
+                currentNodeOfResult = result.rowsNodes[i]->link;
+            } else {
+                currentNodeOfResult->next = new MatrixNode<T>(i, currentNodeOfOther->column,
+                                                              currentNodeOfOther->data);
+                currentNodeOfResult = currentNodeOfResult->next;
+            }
+            if (rowsBelow[currentNodeOfResult->column])
+                currentNodeOfResult->down = rowsBelow[currentNodeOfResult->column];
+            rowsBelow[currentNodeOfResult->column] = currentNodeOfResult;
+            currentNodeOfOther = currentNodeOfOther->next;
+        }
+    }
+
 public:
     Matrix(sui rows, sui columns) : numberOfRows(rows), numberOfColumns(columns) {
         for (sui i = 0; i < rows; ++i)
@@ -316,42 +337,12 @@ public:
                 
                 
             }
-            if (rowsNodes[i]->link and !other.rowsNodes[i]->link) {
-                MatrixNode<T> *currentNodeOfThis = rowsNodes[i]->link;
-                while (currentNodeOfThis) {
-                    if (!result.rowsNodes[i]->link) {
-                        result.rowsNodes[i]->link = new MatrixNode<T>(i, currentNodeOfThis->column, 
-                                currentNodeOfThis->data);
-                        currentNodeOfResult = result.rowsNodes[i]->link;
-                    } else {
-                        currentNodeOfResult->next = new MatrixNode<T>(i, currentNodeOfThis->column,
-                                currentNodeOfThis->data);
-                        currentNodeOfResult = currentNodeOfResult->next;
-                    }
-                    if (rowsBelow[currentNodeOfResult->column])
-                        currentNodeOfResult->down = rowsBelow[currentNodeOfResult->column];
-                    rowsBelow[currentNodeOfResult->column] = currentNodeOfResult;
-                    currentNodeOfThis = currentNodeOfThis->next;
-                }
-            }
-            if (!rowsNodes[i]->link and other.rowsNodes[i]->link) {
-                MatrixNode<T> *currentNodeOfOther = other.rowsNodes[i]->link;
-                while (currentNodeOfOther) {
-                    if (!result.rowsNodes[i]->link) {
-                        result.rowsNodes[i]->link = new MatrixNode<T>(i, currentNodeOfOther->column,
-                                                                      currentNodeOfOther->data);
-                        currentNodeOfResult = result.rowsNodes[i]->link;
-                    } else {
-                        currentNodeOfResult->next = new MatrixNode<T>(i, currentNodeOfOther->column,
-                                                                      currentNodeOfOther->data);
-                        currentNodeOfResult = currentNodeOfResult->next;
-                    }
-                    if (rowsBelow[currentNodeOfResult->column])
-                        currentNodeOfResult->down = rowsBelow[currentNodeOfResult->column];
-                    rowsBelow[currentNodeOfResult->column] = currentNodeOfResult;
-                    currentNodeOfOther = currentNodeOfOther->next;
-                }
-            }
+            if (rowsNodes[i]->link and !other.rowsNodes[i]->link)
+                operationAdditionFillRowOfResultIfASourceNodeIsNullptr(*this, i, currentNodeOfResult, result,
+                        rowsBelow);
+            if (!rowsNodes[i]->link and other.rowsNodes[i]->link)
+                operationAdditionFillRowOfResultIfASourceNodeIsNullptr(other, i, currentNodeOfResult, result,
+                        rowsBelow);
         }
         for (sui i = 0; i < result.numberOfColumns; ++i)
             if (rowsBelow[i])
