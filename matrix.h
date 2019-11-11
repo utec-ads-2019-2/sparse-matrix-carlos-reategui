@@ -62,8 +62,10 @@ public:
             columnsNodes.push_back(new SourceNode<T>(i));
     }
 
-    Matrix(const Matrix& other) : numberOfRows(other.numberOfRows), numberOfColumns(other.numberOfColumns) {
-        cout << "making copy" << endl;
+    Matrix(const Matrix &other) {
+        numberOfRows = other.numberOfRows;
+        numberOfColumns = other.numberOfColumns;
+
         for (sui i = 0; i < other.numberOfRows; ++i)
             rowsNodes.push_back(new SourceNode<T>(i));
 
@@ -94,6 +96,44 @@ public:
         for (sui i = 0; i < other.numberOfColumns; ++i)
             if (rowsBelow[i])
                 columnsNodes[i]->link = rowsBelow[i];
+    }
+
+    Matrix<T>& operator=(const Matrix<T> &other) {
+        numberOfRows = other.numberOfRows;
+        numberOfColumns = other.numberOfColumns;
+
+        for (sui i = 0; i < other.numberOfRows; ++i)
+            rowsNodes[i] = new SourceNode<T>(i);
+
+        for (sui i = 0; i < other.numberOfColumns; ++i)
+            columnsNodes[i] = new SourceNode<T>(i);
+
+        map<sui, MatrixNode<T>* > rowsBelow;
+        for (int i = other.numberOfRows - 1; i >= 0; --i) {
+            if (other.rowsNodes[i]->link) {
+                MatrixNode<T> *currentNodeOfThis = nullptr, *currentNodeOfOther = other.rowsNodes[i]->link;
+                while (currentNodeOfOther) {
+                    if (!rowsNodes[i]->link) {
+                        rowsNodes[i]->link = new MatrixNode<T>(currentNodeOfOther->row, currentNodeOfOther->column,
+                                                               currentNodeOfOther->data);
+                        currentNodeOfThis = rowsNodes[i]->link;
+                    } else {
+                        currentNodeOfThis->next = new MatrixNode<T>(currentNodeOfOther->row, currentNodeOfOther->column,
+                                                                    currentNodeOfOther->data);
+                        currentNodeOfThis = currentNodeOfThis->next;
+                    }
+                    if (rowsBelow[currentNodeOfThis->column])
+                        currentNodeOfThis->down = rowsBelow[currentNodeOfThis->column];
+                    rowsBelow[currentNodeOfThis->column] = currentNodeOfThis;
+                    currentNodeOfOther = currentNodeOfOther->next;
+                }
+            }
+        }
+        for (sui i = 0; i < other.numberOfColumns; ++i)
+            if (rowsBelow[i])
+                columnsNodes[i]->link = rowsBelow[i];
+
+        return *this;
     }
 
     // O(n)
@@ -193,7 +233,7 @@ public:
     }
 
     // O(n^2)
-    bool operator==(Matrix<T>& other) {
+    bool operator==(Matrix<T> &other) {
         if (numberOfRows != other.numberOfRows or numberOfColumns != other.numberOfColumns)
             return false;
 
@@ -216,8 +256,12 @@ public:
         return true;
     }
 
+    bool operator!=(Matrix<T> &other) {
+        return !this->operator==(other);
+    }
+
     // O(n^2)
-    Matrix<T> operator*(T scalar) const {
+    const Matrix<T> operator*(T scalar) const {
         Matrix<T> result(numberOfRows, numberOfColumns);
         map<sui, MatrixNode<T>* > rowsBelow;
         for (int i = numberOfRows - 1; i >= 0; --i) {
@@ -252,7 +296,7 @@ public:
     }
 
     // O(n^3)
-    Matrix<T> operator*(Matrix<T>& other) const {
+    const Matrix<T> operator*(Matrix<T> &other) const {
         if (numberOfColumns != other.numberOfRows)
             throw invalid_argument("It is not possible to multiply the given matrices");
 
@@ -301,7 +345,7 @@ public:
     }
 
     // O(n^2)
-    Matrix<T> operator+(Matrix<T>& other) const {
+    const Matrix<T> operator+(Matrix<T> &other) const {
         if (numberOfRows != other.numberOfRows or numberOfColumns != other.numberOfColumns)
             throw invalid_argument("This matrix's rows or/and columns are different from the other matrix");
 
@@ -351,7 +395,7 @@ public:
     }
 
     // O(n^2)
-    Matrix<T> operator-(Matrix<T>& other) const {
+    const Matrix<T> operator-(Matrix<T> &other) const {
         if (numberOfRows != other.numberOfRows or numberOfColumns != other.numberOfColumns)
             throw invalid_argument("This matrix's rows or/and columns are different from the other matrix");
 
@@ -431,7 +475,7 @@ public:
     }
 
     // O(n^2)
-    Matrix<T> transpose() const {
+    const Matrix<T> transpose() const {
         Matrix<T> result(numberOfColumns, numberOfRows);
         map<sui, MatrixNode<T>* > columnOntTheRightOfCurrentColumn;
         for (int i = numberOfRows - 1; i >= 0; --i) {
@@ -495,7 +539,7 @@ public:
     }
 
     ~Matrix() {
-        /*while (!rowsNodes.empty()) {
+        while (!rowsNodes.empty()) {
             MatrixNode<T> *currentNode = rowsNodes.back()->link;
             while (currentNode) {
                 MatrixNode<T> *temp = currentNode;
@@ -506,7 +550,7 @@ public:
         }
         while (!columnsNodes.empty())
             columnsNodes.pop_back();
-        numberOfRows = numberOfColumns = 0;*/
+        numberOfRows = numberOfColumns = 0;
     }
 };
 
