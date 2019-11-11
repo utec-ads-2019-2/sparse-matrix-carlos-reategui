@@ -99,14 +99,16 @@ public:
     }
 
     Matrix<T>& operator=(const Matrix<T> &other) {
+        deleteMatrix();
+
         numberOfRows = other.numberOfRows;
         numberOfColumns = other.numberOfColumns;
 
         for (sui i = 0; i < other.numberOfRows; ++i)
-            rowsNodes[i] = new SourceNode<T>(i);
+            rowsNodes.push_back(new SourceNode<T>(i));
 
         for (sui i = 0; i < other.numberOfColumns; ++i)
-            columnsNodes[i] = new SourceNode<T>(i);
+            columnsNodes.push_back(new SourceNode<T>(i));
 
         map<sui, MatrixNode<T>* > rowsBelow;
         for (int i = other.numberOfRows - 1; i >= 0; --i) {
@@ -538,7 +540,7 @@ public:
         }
     }
 
-    ~Matrix() {
+    void deleteMatrix() {
         while (!rowsNodes.empty()) {
             MatrixNode<T> *currentNode = rowsNodes.back()->link;
             while (currentNode) {
@@ -551,6 +553,10 @@ public:
         while (!columnsNodes.empty())
             columnsNodes.pop_back();
         numberOfRows = numberOfColumns = 0;
+    }
+
+    ~Matrix() {
+        deleteMatrix();
     }
 };
 

@@ -109,6 +109,8 @@ int main() {
     matrixToDelete->set(1, 1, 4);
     delete matrixToDelete;
 
+    m11 = multiplication;
+
     return EXIT_SUCCESS;
 }
 
