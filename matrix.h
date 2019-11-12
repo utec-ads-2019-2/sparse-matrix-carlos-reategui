@@ -263,7 +263,7 @@ public:
     }
 
     // O(n^2)
-    const Matrix<T> operator*(T scalar) const {
+    Matrix<T> operator*(T scalar) const {
         Matrix<T> result(numberOfRows, numberOfColumns);
         map<sui, MatrixNode<T>* > rowsBelow;
         for (int i = numberOfRows - 1; i >= 0; --i) {
@@ -298,7 +298,7 @@ public:
     }
 
     // O(n^3)
-    const Matrix<T> operator*(Matrix<T> &other) const {
+    Matrix<T> operator*(Matrix<T> &other) const {
         if (numberOfColumns != other.numberOfRows)
             throw invalid_argument("It is not possible to multiply the given matrices");
 
@@ -347,7 +347,7 @@ public:
     }
 
     // O(n^2)
-    const Matrix<T> operator+(Matrix<T> &other) const {
+    Matrix<T> operator+(Matrix<T> &other) const {
         if (numberOfRows != other.numberOfRows or numberOfColumns != other.numberOfColumns)
             throw invalid_argument("This matrix's rows or/and columns are different from the other matrix");
 
@@ -397,7 +397,7 @@ public:
     }
 
     // O(n^2)
-    const Matrix<T> operator-(Matrix<T> &other) const {
+    Matrix<T> operator-(Matrix<T> &other) const {
         if (numberOfRows != other.numberOfRows or numberOfColumns != other.numberOfColumns)
             throw invalid_argument("This matrix's rows or/and columns are different from the other matrix");
 
@@ -477,7 +477,7 @@ public:
     }
 
     // O(n^2)
-    const Matrix<T> transpose() const {
+    Matrix<T> transpose() const {
         Matrix<T> result(numberOfColumns, numberOfRows);
         map<sui, MatrixNode<T>* > columnOntTheRightOfCurrentColumn;
         for (int i = numberOfRows - 1; i >= 0; --i) {
