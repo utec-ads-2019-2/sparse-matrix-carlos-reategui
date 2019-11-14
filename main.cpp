@@ -11,6 +11,10 @@ ostream& operator<<(ostream& os, Matrix<T> &matrix) {
 int main() {
     Tester::execute();
 
+    cout << "\n\t----------------" << endl;
+    cout << "\t\tmy tests" << endl;
+    cout << "\t----------------" << endl;
+
     Matrix<int> m1(2, 2);
     m1.set(0, 0, 1);
     m1.set(0, 1, 2);
@@ -110,6 +114,23 @@ int main() {
     delete matrixToDelete;
 
     m11 = multiplication;
+
+    Matrix<int> test1(2, 2);
+    //test1.set(0, 0, 0);
+    test1.set(0, 1, 79);
+    test1.set(1, 0, 36);
+    //test1.set(1, 1, 0);
+
+    Matrix<int> test2(2, 2);
+    test2.set(0, 0, 22);
+    test2.set(0, 1, 72);
+    test2.set(1, 0, 19);
+    test2.set(1, 1, 41);
+
+    Matrix<int> result = test1 + test2;
+
+
+    cout << result << endl;
 
     return EXIT_SUCCESS;
 }
